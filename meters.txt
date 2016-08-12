@@ -5,7 +5,7 @@ random.meter.interval = 30
 [data.source]
 type = pipe
 polling.interval = 0.01
-pipe.name = /tmp/mpd.fifo
+pipe.name = /home/pi/mpd.fifo
 pipe.size = 4096
 volume.constant = 80.0
 volume.min = 0.0
