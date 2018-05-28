@@ -1,34 +1,31 @@
-# Copyright 2016 Peppy Player peppy.player@gmail.com
+# Copyright 2016-2018 PeppyMeter peppy.player@gmail.com
 # 
-# This file is part of Peppy Player.
+# This file is part of PeppyMeter.
 # 
-# Peppy Player is free software: you can redistribute it and/or modify
+# PeppyMeter is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
 # 
-# Peppy Player is distributed in the hope that it will be useful,
+# PeppyMeter is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
 # 
 # You should have received a copy of the GNU General Public License
-# along with Peppy Player. If not, see <http://www.gnu.org/licenses/>.
+# along with PeppyMeter. If not, see <http://www.gnu.org/licenses/>.
 
 from random import randrange
 import time
 import copy
-
-from datasource import DataSource
 from meterfactory import MeterFactory
-from screensaver import Screensaver
-from configfileparser import ConfigFileParser
+from screensavermeter import ScreensaverMeter
 from configfileparser import METER, METER_NAMES, RANDOM_METER_INTERVAL
 
-class Vumeter(Screensaver):
+class Vumeter(ScreensaverMeter):
     """ VU Meter plug-in. """
     
-    def __init__(self, util):
+    def __init__(self, util, data_source):
         """ Initializer
         
         :param util: utility class
@@ -37,14 +34,12 @@ class Vumeter(Screensaver):
         self.update_period = 1
         self.meter = None
         
-        parser = ConfigFileParser()
-        self.meter_config = parser.meter_config
-        self.meter_names = self.meter_config[METER_NAMES]
-        self.random_meter_interval = self.meter_config[RANDOM_METER_INTERVAL]
-        self.data_source = DataSource(self.meter_config)
+        self.meter_names = self.util.meter_config[METER_NAMES]
+        self.random_meter_interval = self.util.meter_config[RANDOM_METER_INTERVAL]
+        self.data_source = data_source
         self.random_meter = False
         
-        if self.meter_config[METER] == "random":
+        if self.util.meter_config[METER] == "random":
             self.random_meter = True
             self.random_meter_names = copy.copy(self.meter_names)            
             
@@ -53,7 +48,8 @@ class Vumeter(Screensaver):
         self.seconds = 0
     
     def get_meter(self):
-        """ Creates meter using meter factory. """        
+        """ Creates meter using meter factory. """  
+              
         if self.meter and not self.random_meter:
             return self.meter
         
@@ -61,10 +57,10 @@ class Vumeter(Screensaver):
             if len(self.random_meter_names) == 0:
                 self.random_meter_names = copy.copy(self.meter_names)
             i = randrange(0, len(self.random_meter_names))     
-            self.meter_config[METER] = self.random_meter_names[i]
+            self.util.meter_config[METER] = self.random_meter_names[i]
             del self.random_meter_names[i]
             
-        factory = MeterFactory(self.util, self.meter_config, self.data_source)
+        factory = MeterFactory(self.util, self.util.meter_config, self.data_source)
         return factory.create_meter()        
     
     def set_volume(self, volume):
@@ -75,19 +71,21 @@ class Vumeter(Screensaver):
         self.current_volume = volume        
     
     def start(self):
-        """ Start data source and meter animation. """        
-        self.data_source.start_data_source()
+        """ Start data source and meter animation. """ 
+               
         self.meter = self.get_meter()
         self.meter.set_volume(self.current_volume)
         self.meter.start()
     
     def stop(self):
-        """ Stop data source and meter animation. """        
-        self.data_source.stop_data_source()
+        """ Stop meter animation. """ 
+        
+        self.seconds = 0       
         self.meter.stop()
     
     def refresh(self):
-        """ Refresh meter. Used to update random meter. """        
+        """ Refresh meter. Used to update random meter. """ 
+               
         if self.random_meter and self.seconds == self.random_meter_interval:
             self.seconds = 0
             self.stop()

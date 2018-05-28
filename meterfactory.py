@@ -1,19 +1,19 @@
-# Copyright 2016 Peppy Player peppy.player@gmail.com
+# Copyright 2016-2018 PeppyMeter peppy.player@gmail.com
 # 
-# This file is part of Peppy Player.
+# This file is part of PeppyMeter.
 # 
-# Peppy Player is free software: you can redistribute it and/or modify
+# PeppyMeter is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
 # 
-# Peppy Player is distributed in the hope that it will be useful,
+# PeppyMeter is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
 # 
 # You should have received a copy of the GNU General Public License
-# along with Peppy Player. If not, see <http://www.gnu.org/licenses/>.
+# along with PeppyMeter. If not, see <http://www.gnu.org/licenses/>.
 
 from meter import Meter
 from maskfactory import MaskFactory
@@ -35,7 +35,8 @@ class MeterFactory(object):
         self.data_source = data_source
         
     def create_meter(self):
-        """ Dispatcher method """        
+        """ Dispatcher method """ 
+               
         meter_name = self.meter_config[METER]
         meter_config_section = self.meter_config[meter_name]
         if meter_config_section[METER_TYPE] == TYPE_LINEAR:
@@ -51,17 +52,14 @@ class MeterFactory(object):
         config = self.meter_config[name]
         
         if config[CHANNELS] == 2:
-            left_channel_queue = self.data_source.left_channel
-            right_channel_queue = self.data_source.right_channel
-            meter = Meter(self.util, TYPE_LINEAR, config[UI_REFRESH_PERIOD], left_channel_queue, right_channel_queue)
+            meter = Meter(self.util, TYPE_LINEAR, config[UI_REFRESH_PERIOD], self.data_source)
             meter.channels = 2
             meter.left_x = config[LEFT_X]
             meter.left_y = config[LEFT_Y]
             meter.right_x = config[RIGHT_X]
             meter.right_y = config[RIGHT_Y]            
         else:
-            mono_channel_queue = self.data_source.mono_channel
-            meter = Meter(self.util, TYPE_LINEAR, config[UI_REFRESH_PERIOD], mono_channel_queue)
+            meter = Meter(self.util, TYPE_LINEAR, config[UI_REFRESH_PERIOD], self.data_source)
             meter.x = config[MONO_X]
             meter.y = config[MONO_Y]
         
@@ -99,13 +97,10 @@ class MeterFactory(object):
         config = self.meter_config[name]
         
         if config[CHANNELS] == 2:
-            left_channel_queue = self.data_source.left_channel
-            right_channel_queue = self.data_source.right_channel
-            meter = Meter(self.util, TYPE_CIRCULAR, config[UI_REFRESH_PERIOD], left_channel_queue, right_channel_queue)
+            meter = Meter(self.util, TYPE_CIRCULAR, config[UI_REFRESH_PERIOD], self.data_source)
             meter.channels = 2
         else:
-            mono_channel_queue = self.data_source.mono_channel
-            meter = Meter(self.util, TYPE_CIRCULAR, config[UI_REFRESH_PERIOD], mono_channel_queue=mono_channel_queue)
+            meter = Meter(self.util, TYPE_CIRCULAR, config[UI_REFRESH_PERIOD], self.data_source)
 
         meter.steps_per_degree = config[STEPS_PER_DEGREE]                 
         start_angle = config[START_ANGLE]

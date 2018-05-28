@@ -1,50 +1,51 @@
-# Copyright 2016 Peppy Player peppy.player@gmail.com
+# Copyright 2016-2018 PeppyMeter peppy.player@gmail.com
 # 
-# This file is part of Peppy Player.
+# This file is part of PeppyMeter.
 # 
-# Peppy Player is free software: you can redistribute it and/or modify
+# PeppyMeter is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
 # 
-# Peppy Player is distributed in the hope that it will be useful,
+# PeppyMeter is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
 # 
 # You should have received a copy of the GNU General Public License
-# along with Peppy Player. If not, see <http://www.gnu.org/licenses/>.
+# along with PeppyMeter. If not, see <http://www.gnu.org/licenses/>.
 
 import os
 
 from component import Component
 from container import Container
-from keys import SCREEN_RECT
-from configfileparser import TYPE_LINEAR, TYPE_CIRCULAR
+from configfileparser import TYPE_LINEAR, TYPE_CIRCULAR, SCREEN_RECT, SCREEN_INFO, SCREEN_SIZE, BASE_PATH
 from linear import LinearAnimator
 from circular import CircularAnimator
 
 class Meter(Container):
     """ The base class for all meters """
     
-    def __init__(self, util, meter_type, ui_refresh_period, left_channel_queue=None, right_channel_queue=None, mono_channel_queue=None):
+    def __init__(self, util, meter_type, ui_refresh_period, data_source):
         """ Initializer
         
         :param util: utility class
         :param meter_type: the type of the meter - linear or circular
         :param ui_refresh_period: refresh interval for animation
-        :param left_channel_queue: left channel queue
-        :param right_channel_queue: right channel queue
-        :param mono_channel_queue: right channel queue
+        :param data_source: audio data source
         """
         self.util = util
-        self.config = util.config
+        self.meter_config = util.meter_config
+        
+        if getattr(util, "config", None):
+            self.config = util.config
+            self.rect = self.config[SCREEN_RECT]
+        else:
+            self.rect = self.util.meter_config[SCREEN_RECT]
+                
         self.meter_type = meter_type
         self.ui_refresh_period = ui_refresh_period
-        self.left_channel_queue = left_channel_queue
-        self.right_channel_queue = right_channel_queue
-        self.mono_channel_queue = mono_channel_queue
-        self.rect = self.config[SCREEN_RECT]
+        self.data_source = data_source       
         Container.__init__(self, util, self.rect, (0, 0, 0))
         self.max_volume = 100.0
         self.total_steps = 100
@@ -100,7 +101,9 @@ class Meter(Container):
         
         :param image_name: the image name
         """
-        path = os.path.join("images",  image_name)        
+        base_path = self.meter_config[BASE_PATH]
+        folder = self.meter_config[SCREEN_INFO][SCREEN_SIZE]
+        path = os.path.join(base_path, folder,  image_name)        
         return self.util.load_pygame_image(path)
     
     def add_image(self, image, x, y, rect=None):
@@ -156,15 +159,15 @@ class Meter(Container):
         
         super(Meter, self).draw()
         self.update()
-        
-        if self.left_channel_queue:
-            self.left = self.start_animator(self.left_channel_queue, self.components[1], self.left_needle_rects) 
-        
-        if self.right_channel_queue:
-            self.right = self.start_animator(self.right_channel_queue, self.components[2], self.right_needle_rects) 
-            
-        if self.mono_channel_queue:
-            self.mono = self.start_animator(self.mono_channel_queue, self.components[1], self.mono_needle_rects) 
+        rects = (self.left_needle_rects, self.right_needle_rects, self.mono_needle_rects)
+        if self.meter_type == TYPE_LINEAR:
+            self.animator = self.start_linear_animator(self.components, rects)
+        elif self.meter_type == TYPE_CIRCULAR:
+            if self.channels == 2:
+                self.left = self.start_circular_animator(self.components[1], rects[0], self.data_source.get_current_left_channel_data)
+                self.right = self.start_circular_animator(self.components[2], rects[1], self.data_source.get_current_right_channel_data)
+            else:
+                self.mono = self.start_circular_animator(self.components[1], rects[2], self.data_source.get_current_mono_channel_data)
 
     def reset_bgr_fgr(self, comp):
         """ Reset background or foreground bounding box  
@@ -177,30 +180,38 @@ class Meter(Container):
 
     def reset_mask(self, comp):
         """ Initialize linear mask. """
+        
         comp.bounding_box.x = comp.content_x
         comp.bounding_box.y = comp.content_y
         comp.bounding_box.w = 1
 
-    def start_animator(self, queue, component, needle_rects=None):
+    def start_circular_animator(self, component, needle_rects, get_data_method):
+        a = CircularAnimator(self.data_source, component, self, self.ui_refresh_period, needle_rects, get_data_method) 
+        a.setDaemon(True)
+        a.start()        
+        return a
+    
+    def start_linear_animator(self, components, rects):
         """ Start meter animation
         
-        :param queue: data provider queue 
         :param component: component to animate
-        :param needle_rects: list of needle bounding boxes
+        :param rects: list of needle bounding boxes
         """
-        a = None
-        if self.meter_type == TYPE_LINEAR:
-            a = LinearAnimator(queue, component, self, self.ui_refresh_period)
-        elif self.meter_type == TYPE_CIRCULAR:
-            a = CircularAnimator(queue, component, self, self.ui_refresh_period, needle_rects)            
+        a = LinearAnimator(self.data_source, components, self, self.ui_refresh_period)
         a.setDaemon(True)
         a.start()        
         return a
     
     def stop(self):
         """ Stop meter animation """
-        if self.left_channel_queue: self.left.run_flag = False
-        if self.right_channel_queue: self.right.run_flag = False
-        if self.mono_channel_queue: self.mono.run_flag = False
+        
+        if self.meter_type == TYPE_LINEAR:
+            self.animator.run_flag = False
+        elif self.meter_type == TYPE_CIRCULAR:
+            if self.channels == 2:
+                self.left.run_flag = False
+                self.right.run_flag = False
+            else:
+                self.mono.run_flag = False
 
     

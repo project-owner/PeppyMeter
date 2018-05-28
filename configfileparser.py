@@ -1,25 +1,53 @@
-# Copyright 2016 Peppy Player peppy.player@gmail.com
+# Copyright 2016-2018 PeppyMeter peppy.player@gmail.com
 # 
-# This file is part of Peppy Player.
+# This file is part of PeppyMeter.
 # 
-# Peppy Player is free software: you can redistribute it and/or modify
+# PeppyMeter is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
 # 
-# Peppy Player is distributed in the hope that it will be useful,
+# PeppyMeter is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
 # 
 # You should have received a copy of the GNU General Public License
-# along with Peppy Player. If not, see <http://www.gnu.org/licenses/>.
+# along with PeppyMeter. If not, see <http://www.gnu.org/licenses/>.
 
 import os
+import logging
 
 from configparser import ConfigParser
 
 CURRENT = "current"
+SCREEN_INFO = "screen.info"
+PYGAME_SCREEN = "pygame.screen"
+WIDTH = "width"
+HEIGHT = "height"
+DEPTH = "depth"
+FRAME_RATE = "frame.rate"
+SCREEN_SIZE = "screen.size"
+SCREEN_RECT = "screen.rect"
+PLAYER = "player"
+OUTPUT_DISPLAY = "output.display"
+OUTPUT_SERIAL = "output.serial"
+OUTPUT_I2C = "output.i2c"
+SERIAL_INTERFACE = "serial.interface"
+DEVICE_NAME = "device.name"
+BAUD_RATE = "baud.rate"
+INCLUDE_TIME = "include.time"
+UPDATE_PERIOD = "update.period"
+I2C_INTERFACE = "i2c.interface"
+PORT = "port"
+LEFT_CHANNEL_ADDRESS = "left.channel.address"
+RIGHT_CHANNEL_ADDRESS = "right.channel.address"
+OUTPUT_SIZE = "output.size"
+USE_LOGGING = "use.logging"
+USE_VU_METER = "use.vu.meter"
+ADJUSTMENT_MPD = "adjust.mpd"
+ADJUSTMENT_VLC = "adjust.vlc"
+ADJUSTMENT_MPLAYER = "adjust.mplayer"
 METER = "meter"
 DATA_SOURCE = "data.source"
 TYPE = "type"
@@ -64,10 +92,19 @@ RIGHT_ORIGIN_X = "right.origin.x"
 RIGHT_ORIGIN_Y = "right.origin.y"
 METER_NAMES = "meter.names"
 RANDOM_METER_INTERVAL = "random.meter.interval"
+BASE_PATH = "base.path"
 
-FOLDER_SCREENSAVER = "screensaver"
-FOLDER_VUMETER = "vumeter"
+FILE_CONFIG = "config.txt"
 FILE_METER_CONFIG = "meters.txt"
+
+SMALL = "small"
+MEDIUM = "medium"
+MEDIUM_WIDTH = 480
+MEDIUM_HEIGHT = 320
+SMALL_WIDTH = 320
+SMALL_HEIGHT = 240
+DEFAULT_DEPTH = 32
+DEFAULT_FRAME_RATE = 30
 
 TYPE_LINEAR = "linear"
 TYPE_CIRCULAR = "circular"
@@ -75,26 +112,67 @@ TYPE_CIRCULAR = "circular"
 class ConfigFileParser(object):
     """ Configuration file parser """
     
-    def __init__(self):
-        """ Initializer """        
+    def __init__(self, base_path):
+        """ Initializer """  
+              
         self.meter_config = {}
         c = ConfigParser()
-        c.read(FILE_METER_CONFIG)
+        
+        self.meter_config[BASE_PATH] = base_path 
+        peppy_meter_path = os.path.join(base_path, FILE_CONFIG)
+        c.read(peppy_meter_path)
         meter_names = list()
         
+        self.meter_config[METER] = c.get(CURRENT, METER)
+        self.meter_config[RANDOM_METER_INTERVAL] = c.getint(CURRENT, RANDOM_METER_INTERVAL)
+        self.meter_config[PLAYER] = c.get(CURRENT, PLAYER)
+        self.meter_config[OUTPUT_DISPLAY] = c.getboolean(CURRENT, OUTPUT_DISPLAY)
+        self.meter_config[OUTPUT_SERIAL] = c.getboolean(CURRENT, OUTPUT_SERIAL)
+        self.meter_config[OUTPUT_I2C] = c.getboolean(CURRENT, OUTPUT_I2C)
+        self.meter_config[USE_LOGGING] = c.getboolean(CURRENT, USE_LOGGING)
+        
+        self.meter_config[SERIAL_INTERFACE] = {}
+        self.meter_config[SERIAL_INTERFACE][DEVICE_NAME] = c.get(SERIAL_INTERFACE, DEVICE_NAME)
+        self.meter_config[SERIAL_INTERFACE][BAUD_RATE] = c.getint(SERIAL_INTERFACE, BAUD_RATE)
+        self.meter_config[SERIAL_INTERFACE][INCLUDE_TIME] = c.getboolean(SERIAL_INTERFACE, INCLUDE_TIME)
+        self.meter_config[SERIAL_INTERFACE][UPDATE_PERIOD] = c.getfloat(SERIAL_INTERFACE, UPDATE_PERIOD)
+        
+        self.meter_config[I2C_INTERFACE] = {}
+        self.meter_config[I2C_INTERFACE][PORT] = c.getint(I2C_INTERFACE, PORT)
+        self.meter_config[I2C_INTERFACE][LEFT_CHANNEL_ADDRESS] = int(c.get(I2C_INTERFACE, LEFT_CHANNEL_ADDRESS), 0)
+        self.meter_config[I2C_INTERFACE][RIGHT_CHANNEL_ADDRESS] = int(c.get(I2C_INTERFACE, RIGHT_CHANNEL_ADDRESS), 0)
+        self.meter_config[I2C_INTERFACE][OUTPUT_SIZE] = c.getint(I2C_INTERFACE, OUTPUT_SIZE)
+        self.meter_config[I2C_INTERFACE][UPDATE_PERIOD] = c.getfloat(I2C_INTERFACE, UPDATE_PERIOD)
+
+        screen_size = c.get(CURRENT, SCREEN_SIZE)
+        self.meter_config[SCREEN_INFO] = {}
+        self.meter_config[SCREEN_INFO][SCREEN_SIZE] = screen_size
+        self.meter_config[SCREEN_INFO][DEPTH] = DEFAULT_DEPTH
+        self.meter_config[SCREEN_INFO][FRAME_RATE] = DEFAULT_FRAME_RATE        
+        
+        if screen_size == MEDIUM:
+            self.meter_config[SCREEN_INFO][WIDTH] = MEDIUM_WIDTH
+            self.meter_config[SCREEN_INFO][HEIGHT] = MEDIUM_HEIGHT
+        elif screen_size == SMALL:
+            self.meter_config[SCREEN_INFO][WIDTH] = SMALL_WIDTH
+            self.meter_config[SCREEN_INFO][HEIGHT] = SMALL_HEIGHT
+        else:
+            logging.debug("Not supported screen size")
+            os._exit(0)
+
+        self.meter_config[DATA_SOURCE] = self.get_data_source_section(c, DATA_SOURCE)
+        
+        meter_config_path = os.path.join(base_path, screen_size, FILE_METER_CONFIG)
+        c = ConfigParser()
+        c.read(meter_config_path)
+        
         for section in c.sections():
-            if section == CURRENT:
-                self.meter_config[METER] = c.get(section, METER)
-                self.meter_config[RANDOM_METER_INTERVAL] = c.getint(section, RANDOM_METER_INTERVAL)
-            elif section == DATA_SOURCE:
-                self.meter_config[section] = self.get_data_source_section(c, section)
-            else:
-                meter_names.append(section)
-                meter_type = c.get(section, METER_TYPE)
-                if meter_type == TYPE_LINEAR:
-                    self.meter_config[section] = self.get_linear_section(c, section, meter_type)
-                elif meter_type == TYPE_CIRCULAR:
-                    self.meter_config[section] = self.get_circular_section(c, section, meter_type)
+            meter_names.append(section)
+            meter_type = c.get(section, METER_TYPE)
+            if meter_type == TYPE_LINEAR:
+                self.meter_config[section] = self.get_linear_section(c, section, meter_type)
+            elif meter_type == TYPE_CIRCULAR:
+                self.meter_config[section] = self.get_circular_section(c, section, meter_type)
         self.meter_config[METER_NAMES] = meter_names
     
     def get_data_source_section(self, config_file, section):
@@ -114,6 +192,9 @@ class ConfigFileParser(object):
         d[MONO_ALGORITHM] = config_file.get(section, MONO_ALGORITHM)
         d[STEREO_ALGORITHM] = config_file.get(section, STEREO_ALGORITHM)
         d[STEP] = config_file.getint(section, STEP)
+        d[ADJUSTMENT_MPD] = config_file.getfloat(section, ADJUSTMENT_MPD)
+        d[ADJUSTMENT_VLC] = config_file.getfloat(section, ADJUSTMENT_VLC)
+        d[ADJUSTMENT_MPLAYER] = config_file.getfloat(section, ADJUSTMENT_MPLAYER)
         return d
     
     def get_linear_section(self, config_file, section, meter_type):

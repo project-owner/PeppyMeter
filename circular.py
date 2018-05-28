@@ -1,19 +1,19 @@
-# Copyright 2016 Peppy Player peppy.player@gmail.com
+# Copyright 2016-2018 PeppyMeter peppy.player@gmail.com
 # 
-# This file is part of Peppy Player.
+# This file is part of PeppyMeter.
 # 
-# Peppy Player is free software: you can redistribute it and/or modify
+# PeppyMeter is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
 # 
-# Peppy Player is distributed in the hope that it will be useful,
+# PeppyMeter is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
 # 
 # You should have received a copy of the GNU General Public License
-# along with Peppy Player. If not, see <http://www.gnu.org/licenses/>.
+# along with PeppyMeter. If not, see <http://www.gnu.org/licenses/>.
 
 import time
 import math
@@ -22,29 +22,35 @@ from threading import Thread
 
 class CircularAnimator(Thread):
     """ Provides needle circular animation in a separate thread """
-    def __init__(self, channel, component, base, ui_refresh_period, needle_rects):
+    
+    def __init__(self, data_source, component, base, ui_refresh_period, needle_rects, get_data_method):
         """ Initializer
         
+        :param data_source: data source
         :param channel: number of channels
         :param component: UI component
         :param base: meter base
         :param ui_refresh_period: animation interval 
         :param needle_rects: list of sprite rectangles
+        :param get_data_method: method to get data
         """
         Thread.__init__(self)             
-        self.channel = channel
+        self.data_source = data_source
         self.component = component
         self.run_flag = True
         self.base = base
         self.ui_refresh_period = ui_refresh_period
         self.previous_index = 0
         self.needle_rects = needle_rects
+        self.get_data = get_data_method
         
     def run(self):
         """ Thread method. Converts volume value into the needle angle and displays corresponding sprite. """
-        while self.run_flag:            
-            volume = self.channel.get()            
-            self.channel.task_done()
+        
+        while self.run_flag:
+            volume = self.get_data()
+            if volume == None:
+                volume = 0.0            
             n = (volume * self.base.max_volume * self.base.incr) / 100.0
             if n >= len(self.base.needle_sprites): n = len(self.base.needle_sprites) - 1
             

@@ -1,0 +1,131 @@
+[bar]
+meter.type = linear
+channels = 2
+ui.refresh.period = 0.01
+bgr.filename = bar-bgr.png
+fgr.filename = bar-fgr.png
+indicator.filename = bar-indicator.png
+left.x = 87
+left.y = 89
+right.x = 87
+right.y = 133       
+position.regular = 11
+position.overload = 3
+step.width.regular = 12
+step.width.overload = 20  
+
+[blue]
+meter.type = circular
+channels = 1
+ui.refresh.period = 0.005
+bgr.filename = blue-bgr.png
+indicator.filename = blue-needle.png
+steps.per.degree = 3
+start.angle = 45
+stop.angle = -45
+distance = 109
+mono.origin.x = 159
+mono.origin.y = 258
+
+[vintage]
+meter.type = circular
+channels = 2
+ui.refresh.period = 0.002
+bgr.filename = vintage-bgr.png
+fgr.filename = vintage-fgr.png
+indicator.filename = vintage-needle.png
+steps.per.degree = 3
+start.angle = 45
+stop.angle = -45
+distance = 28
+left.origin.x = 87
+left.origin.y = 157
+right.origin.x = 234
+right.origin.y = 157
+
+[dash]
+meter.type = linear
+channels = 2
+ui.refresh.period = 0.01
+bgr.filename = dash-bgr.png
+indicator.filename = dash-indicator.png
+left.x = 18
+left.y = 101
+right.x = 18
+right.y = 128       
+position.regular = 9
+position.overload = 4
+step.width.regular = 22
+step.width.overload = 24
+
+[gas]
+meter.type = linear
+channels = 2
+ui.refresh.period = 0.01
+bgr.filename = gas-bgr.png
+indicator.filename = gas-indicator.png
+left.x = 30
+left.y = 101
+right.x = 30
+right.y = 125       
+position.regular = 69
+step.width.regular = 4
+
+[rainbow]
+meter.type = circular
+channels = 1
+ui.refresh.period = 0.005
+bgr.filename = rainbow-bgr.png
+indicator.filename = rainbow-needle.png
+steps.per.degree = 3
+start.angle = 39
+stop.angle = -39
+distance = 120
+mono.origin.x = 162
+mono.origin.y = 257
+
+[grunge]
+meter.type = circular
+channels = 2
+ui.refresh.period = 0.002
+bgr.filename = grunge-bgr.png
+fgr.filename = grunge-fgr.png
+indicator.filename = grunge-needle.png
+steps.per.degree = 3
+start.angle = 49
+stop.angle = -46
+distance = 20
+left.origin.x = 82
+left.origin.y = 140
+right.origin.x = 237
+right.origin.y = 140
+
+[royal]
+meter.type = circular
+channels = 1
+ui.refresh.period = 0.005
+bgr.filename = royal-bgr.png
+fgr.filename = royal-fgr.png
+indicator.filename = royal-needle.png
+steps.per.degree = 3
+start.angle = 52
+stop.angle = -51
+distance = 52
+mono.origin.x = 160
+mono.origin.y = 174
+
+[compass]
+meter.type = circular
+channels = 2
+ui.refresh.period = 0.002
+bgr.filename = compass-bgr.png
+fgr.filename = compass-fgr.png
+indicator.filename = compass-needle.png
+steps.per.degree = 3
+start.angle = 55
+stop.angle = -56
+distance = 0
+left.origin.x = 85
+left.origin.y = 119
+right.origin.x = 234
+right.origin.y = 119

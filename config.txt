@@ -1,0 +1,37 @@
+[current]
+meter = random
+random.meter.interval = 20
+screen.size = medium
+player = vlc
+output.display = True
+output.serial = False
+output.i2c = False
+use.logging = False
+
+[serial.interface]
+device.name = /dev/serial0
+baud.rate = 9600
+include.time = False
+update.period = 0.1
+
+[i2c.interface]
+port = 1
+left.channel.address = 0x21
+right.channel.address = 0x20
+output.size = 10
+update.period = 0.1
+
+[data.source]
+type = noise
+polling.interval = 0.01
+pipe.name = /home/pi/myfifo
+pipe.size = 4096
+volume.constant = 80.0
+volume.min = 0.0
+volume.max = 100.0
+step = 6
+mono.algorithm = average
+stereo.algorithm = new
+adjust.mpd = 2.5
+adjust.vlc = 35.0
+adjust.mplayer = 4.0
