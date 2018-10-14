@@ -1,7 +1,7 @@
 ## Goya Edition 2018.10.14
 
 New features:
-* Leveraged peppyalsa ALSA plugin instead of file ALSA plugin
+* Modified named pipe data source to leverage peppyalsa ALSA plugin instead of file ALSA plugin
 
 ## Vermeer Edition 2018.05.28
 
