@@ -29,7 +29,6 @@ DEPTH = "depth"
 FRAME_RATE = "frame.rate"
 SCREEN_SIZE = "screen.size"
 SCREEN_RECT = "screen.rect"
-PLAYER = "player"
 OUTPUT_DISPLAY = "output.display"
 OUTPUT_SERIAL = "output.serial"
 OUTPUT_I2C = "output.i2c"
@@ -45,18 +44,15 @@ RIGHT_CHANNEL_ADDRESS = "right.channel.address"
 OUTPUT_SIZE = "output.size"
 USE_LOGGING = "use.logging"
 USE_VU_METER = "use.vu.meter"
-ADJUSTMENT_MPD = "adjust.mpd"
-ADJUSTMENT_VLC = "adjust.vlc"
-ADJUSTMENT_MPLAYER = "adjust.mplayer"
 METER = "meter"
 DATA_SOURCE = "data.source"
 TYPE = "type"
 POLLING_INTERVAL = "polling.interval"
 PIPE_NAME = "pipe.name"
-PIPE_SIZE = "pipe.size"
 VOLUME_CONSTANT = "volume.constant"
 VOLUME_MIN = "volume.min"
 VOLUME_MAX = "volume.max"
+VOLUME_MAX_IN_PIPE = "volume.max.in.pipe"
 STEP = "step"
 MONO_ALGORITHM = "mono.algorithm"
 STEREO_ALGORITHM = "stereo.algorithm"
@@ -125,7 +121,6 @@ class ConfigFileParser(object):
         
         self.meter_config[METER] = c.get(CURRENT, METER)
         self.meter_config[RANDOM_METER_INTERVAL] = c.getint(CURRENT, RANDOM_METER_INTERVAL)
-        self.meter_config[PLAYER] = c.get(CURRENT, PLAYER)
         self.meter_config[OUTPUT_DISPLAY] = c.getboolean(CURRENT, OUTPUT_DISPLAY)
         self.meter_config[OUTPUT_SERIAL] = c.getboolean(CURRENT, OUTPUT_SERIAL)
         self.meter_config[OUTPUT_I2C] = c.getboolean(CURRENT, OUTPUT_I2C)
@@ -185,16 +180,13 @@ class ConfigFileParser(object):
         d[TYPE] = config_file.get(section, TYPE)
         d[POLLING_INTERVAL] = config_file.getfloat(section, POLLING_INTERVAL)
         d[PIPE_NAME] = config_file.get(section, PIPE_NAME)
-        d[PIPE_SIZE] = config_file.getint(section, PIPE_SIZE)
         d[VOLUME_CONSTANT] = config_file.getfloat(section, VOLUME_CONSTANT)
         d[VOLUME_MIN] = config_file.getfloat(section, VOLUME_MIN)
         d[VOLUME_MAX] = config_file.getfloat(section, VOLUME_MAX)
+        d[VOLUME_MAX_IN_PIPE] = config_file.getfloat(section, VOLUME_MAX_IN_PIPE)
         d[MONO_ALGORITHM] = config_file.get(section, MONO_ALGORITHM)
         d[STEREO_ALGORITHM] = config_file.get(section, STEREO_ALGORITHM)
-        d[STEP] = config_file.getint(section, STEP)
-        d[ADJUSTMENT_MPD] = config_file.getfloat(section, ADJUSTMENT_MPD)
-        d[ADJUSTMENT_VLC] = config_file.getfloat(section, ADJUSTMENT_VLC)
-        d[ADJUSTMENT_MPLAYER] = config_file.getfloat(section, ADJUSTMENT_MPLAYER)
+        d[STEP] = config_file.getint(section, STEP)        
         return d
     
     def get_linear_section(self, config_file, section, meter_type):

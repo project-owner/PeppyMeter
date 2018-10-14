@@ -16,12 +16,10 @@
 # along with PeppyMeter. If not, see <http://www.gnu.org/licenses/>.
 
 import math
-import audioop
 import time
 import statistics
 import logging
 
-from queue import Queue
 from random import uniform
 from threading import Thread, RLock
 from configfileparser import *
@@ -40,13 +38,6 @@ STEREO_ALGORITHM_NEW = "new"
 STEREO_ALGORITHM_LOGARITHM = "logarithm"
 STEREO_ALGORITHM_AVERAGE = "average"
 
-PLAYER_MPD = "mpd"
-PLAYER_VLC = "vlc"
-PLAYER_MPLAYER = "mplayer"
-
-LEFT = (1, 0)
-RIGHT = (0, 1)
-
 class DataSource(object):
     """ Provides methods to generate different types of audio signal. """
     
@@ -58,27 +49,25 @@ class DataSource(object):
         :param c: configuration dictionary
         """
         self.config = c[DATA_SOURCE]
-        self.audio_channel = Queue(maxsize=1)
         self.mono_algorithm = self.config[MONO_ALGORITHM]
         self.stereo_algorithm = self.config[STEREO_ALGORITHM]
         self.ds_type = self.config[TYPE]
         self.const = self.config[VOLUME_CONSTANT]
         self.pipe_name = self.config[PIPE_NAME]
         self.min = self.config[VOLUME_MIN]
-        self.max = self.config[VOLUME_MAX]
+        self.max_in_ui = self.config[VOLUME_MAX]
+        self.max_in_pipe = self.config[VOLUME_MAX_IN_PIPE]
         
-        self.player = c[PLAYER]
         self.v = 0
         self.step = self.config[STEP]
-        self.pipe_size = self.config[PIPE_SIZE]
-        self.rng = list(range(int(self.min), int(self.max)))
+        self.pipe_size = 4
+        self.rng = list(range(int(self.min), int(self.max_in_ui)))
         self.double_rng = self.rng
-        self.double_rng.extend(range(int(self.max) - 1, int(self.min), -1))
+        self.double_rng.extend(range(int(self.max_in_ui) - 1, int(self.min), -1))
         self.pipe = None
         if self.ds_type == SOURCE_PIPE:
             thread = Thread(target=self.open_pipe)
             thread.start()
-        self.k = 32767 # for 16 bits
         self.previous_left = self.previous_right = self.previous_mono = 0.0
         self.run_flag = True
         self.polling_interval = self.config[POLLING_INTERVAL]
@@ -88,9 +77,9 @@ class DataSource(object):
     def open_pipe(self):
         try:            
             logging.debug("opening pipe...")
-            self.pipe = os.open(self.pipe_name, os.O_RDONLY)
+            self.pipe = os.open(self.pipe_name, os.O_RDONLY | os.O_NONBLOCK)
             logging.debug("pipe opened")
-        except:
+        except Exception as e:
             logging.debug("Cannot open named pipe: " + self.pipe_name)
             os._exit(0)
     
@@ -166,8 +155,8 @@ class DataSource(object):
     def get_noise_value(self):
         """ Generate random value for all channels. """
         
-        new_left = uniform(self.min, self.max)
-        new_right = uniform(self.min, self.max)            
+        new_left = uniform(self.min, self.max_in_ui)
+        new_right = uniform(self.min, self.max_in_ui)            
         new_mono = self.get_mono(new_left, new_right)
         
         left = self.get_channel(self.previous_left, new_left)
@@ -185,7 +174,7 @@ class DataSource(object):
         
         value = self.rng[int(self.v)]      
         s = (value, value, value)
-        self.v = (self.v + self.step) % self.max
+        self.v = (self.v + self.step) % self.max_in_ui
         return s
     
     def get_triangle_value(self):
@@ -193,13 +182,13 @@ class DataSource(object):
         
         value = self.double_rng[self.v]       
         t = (value, value, value)
-        self.v = (self.v + self.step) % (int(self.max * 2 - 1))
+        self.v = (self.v + self.step) % (int(self.max_in_ui * 2 - 1))
         return t
     
     def get_sine_value(self):
         """ Generate sine shape signal. """ 
                
-        a = int(self.max * ((1 + math.sin(math.radians(-90 + self.v)))/2))
+        a = int(self.max_in_ui * ((1 + math.sin(math.radians(-90 + self.v)))/2))
         s = (a, a, a)
         self.v = (self.v + self.step * 6) % 360
         return s
@@ -208,20 +197,19 @@ class DataSource(object):
         """ Get signal from the named pile. """ 
                
         data = None
-        left = right = mono = 1.0
+        left = right = mono = 0.0
         
         if self.pipe == None:
             return (left, right, mono)
         
         try:
             data = os.read(self.pipe, self.pipe_size)
+            length = len(data) 
+            if length == 0:
+                return (self.previous_left, self.previous_right, self.previous_mono)
             
-            if self.player == PLAYER_VLC:
-                new_left = new_right = self.get_pipe_channel(data, RIGHT)
-            else:
-                new_left = self.get_pipe_channel(data, LEFT)
-                new_right = self.get_pipe_channel(data, RIGHT)
-            
+            new_left = int(self.max_in_ui * ((data[length - 4] + (data[length - 3] << 8)) / self.max_in_pipe))
+            new_right = int(self.max_in_ui * ((data[length - 2] + (data[length - 1] << 8)) / self.max_in_pipe))
             new_mono = self.get_mono(new_left, new_right)
             
             left = self.get_channel(self.previous_left, new_left)
@@ -230,31 +218,11 @@ class DataSource(object):
             
             self.previous_left = new_left
             self.previous_right = new_right
-            self.previous_mono = 0
             self.previous_mono = new_mono
-        except:
-            pass
+        except Exception as e:
+            logging.debug(e)
         
-        return (left, right, mono)
-    
-    def get_pipe_channel(self, data, channel):
-        """ Retrieve data for particular channel """
-        
-        if self.player == PLAYER_MPD:
-            n = self.config[ADJUSTMENT_MPD]
-        elif self.player == PLAYER_VLC:
-            n = self.config[ADJUSTMENT_VLC]
-        elif self.player == PLAYER_MPLAYER:
-            n = self.config[ADJUSTMENT_MPLAYER]
-        else:
-            n = 1.0
-        
-        ch = audioop.tomono(data, 2, channel[0], channel[1])
-        mul = audioop.mul(ch, 2, n)
-        ch_signal = audioop.rms(mul, 2)       
-        v = int(self.max * (ch_signal / self.k))
-        
-        return v
+        return (self.previous_left, self.previous_right, self.previous_mono)
     
     def get_mono(self, left, right):
         """ Create mono signal from stereo using particular algorithm """ 

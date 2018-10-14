@@ -33,10 +33,11 @@ from configfileparser import ConfigFileParser, SCREEN_RECT, SCREEN_INFO, WIDTH, 
 class Peppymeter(ScreensaverMeter):
     """ Peppy Meter class """
     
-    def __init__(self, util=None):
+    def __init__(self, util=None, standalone=False):
         """ Initializer
         
         :param util: utility object
+        :param standalone: True - standalone version, False - part of Peppy player
         """
         ScreensaverMeter.__init__(self)
         if util:
@@ -56,7 +57,13 @@ class Peppymeter(ScreensaverMeter):
         self.util.meter_config = parser.meter_config
         self.outputs = {}
         
-        # no VU Meter support for Windows and mplayer
+        if standalone:
+            if self.util.meter_config[USE_LOGGING]:
+                logging.basicConfig(level=logging.NOTSET)            
+            else:
+                logging.disable(logging.CRITICAL)
+        
+        # no VU Meter support for Windows
         if "win" in sys.platform or use_vu_meter == False:
             self.util.meter_config[DATA_SOURCE][TYPE] = SOURCE_NOISE
         
@@ -72,11 +79,6 @@ class Peppymeter(ScreensaverMeter):
             
         if self.util.meter_config[OUTPUT_I2C]:
             self.outputs[OUTPUT_I2C] = I2CInterface(self.util.meter_config, self.data_source)
-
-        if self.util.meter_config[USE_LOGGING]:
-            logging.basicConfig(level=logging.NOTSET)            
-        else:
-            logging.disable(logging.CRITICAL)
 
         self.start_interface_outputs()
     
@@ -170,8 +172,7 @@ class Peppymeter(ScreensaverMeter):
        
 if __name__ == "__main__":
     """ This is called by stand-alone PeppyMeter """
-    
-    pm = Peppymeter()
+    pm = Peppymeter(standalone=True)
     if pm.util.meter_config[DATA_SOURCE][TYPE] != SOURCE_PIPE:      
         pm.data_source.start_data_source()
     if pm.util.meter_config[OUTPUT_DISPLAY]:
