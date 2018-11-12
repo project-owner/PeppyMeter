@@ -3,7 +3,6 @@ meter.type = linear
 channels = 2
 ui.refresh.period = 0.01
 bgr.filename = bar-bgr.png
-fgr.filename = bar-fgr.png
 indicator.filename = bar-indicator.png
 left.x = 87
 left.y = 89

@@ -65,7 +65,8 @@ class Peppymeter(ScreensaverMeter):
         
         # no VU Meter support for Windows
         if "win" in sys.platform or use_vu_meter == False:
-            self.util.meter_config[DATA_SOURCE][TYPE] = SOURCE_NOISE
+            if self.util.meter_config[DATA_SOURCE][TYPE] == SOURCE_PIPE:
+                self.util.meter_config[DATA_SOURCE][TYPE] = SOURCE_NOISE
         
         self.data_source = DataSource(self.util.meter_config)
         if self.util.meter_config[DATA_SOURCE][TYPE] == SOURCE_PIPE or use_vu_meter == True:      

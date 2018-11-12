@@ -95,6 +95,9 @@ FILE_METER_CONFIG = "meters.txt"
 
 SMALL = "small"
 MEDIUM = "medium"
+LARGE = "large"
+LARGE_WIDTH = 800
+LARGE_HEIGHT = 480
 MEDIUM_WIDTH = 480
 MEDIUM_HEIGHT = 320
 SMALL_WIDTH = 320
@@ -151,6 +154,9 @@ class ConfigFileParser(object):
         elif screen_size == SMALL:
             self.meter_config[SCREEN_INFO][WIDTH] = SMALL_WIDTH
             self.meter_config[SCREEN_INFO][HEIGHT] = SMALL_HEIGHT
+        elif screen_size == LARGE:
+            self.meter_config[SCREEN_INFO][WIDTH] = LARGE_WIDTH
+            self.meter_config[SCREEN_INFO][HEIGHT] = LARGE_HEIGHT
         else:
             logging.debug("Not supported screen size")
             os._exit(0)
