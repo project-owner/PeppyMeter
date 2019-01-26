@@ -1,3 +1,9 @@
+## Durer Edition 2018.01.26
+
+New features:
+* Fixed 'Display' output. If disabled it will be possible to output signal to a hardware only. No UI will be displaied in this case.
+* Added 'PWM' output. It will allow to use LEDs and gas tubes as a hardware VU Meters.
+
 ## El Greco Edition 2018.11.12
 
 New features:
