@@ -1,4 +1,4 @@
-# Copyright 2016-2018 PeppyMeter peppy.player@gmail.com
+# Copyright 2016-2019 PeppyMeter peppy.player@gmail.com
 # 
 # This file is part of PeppyMeter.
 # 
@@ -84,7 +84,7 @@ class SerialInterface():
             time.sleep(self.update_period)
     
     def get_data(self, left, right):
-        """ Prepareata for writing. Include time if enabled.
+        """ Prepare data for writing. Include time if enabled.
         
         :left: data for left channel
         :right: data for right channel

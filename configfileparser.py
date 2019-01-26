@@ -1,4 +1,4 @@
-# Copyright 2016-2018 PeppyMeter peppy.player@gmail.com
+# Copyright 2016-2019 PeppyMeter peppy.player@gmail.com
 # 
 # This file is part of PeppyMeter.
 # 
@@ -32,16 +32,25 @@ SCREEN_RECT = "screen.rect"
 OUTPUT_DISPLAY = "output.display"
 OUTPUT_SERIAL = "output.serial"
 OUTPUT_I2C = "output.i2c"
+OUTPUT_PWM = "output.pwm"
+
 SERIAL_INTERFACE = "serial.interface"
 DEVICE_NAME = "device.name"
 BAUD_RATE = "baud.rate"
 INCLUDE_TIME = "include.time"
 UPDATE_PERIOD = "update.period"
+
 I2C_INTERFACE = "i2c.interface"
 PORT = "port"
 LEFT_CHANNEL_ADDRESS = "left.channel.address"
 RIGHT_CHANNEL_ADDRESS = "right.channel.address"
 OUTPUT_SIZE = "output.size"
+
+PWM_INTERFACE = "pwm.interface"
+FREQUENCY = "frequency"
+GPIO_PIN_LEFT = "gpio.pin.left"
+GPIO_PIN_RIGHT = "gpio.pin.right"
+
 USE_LOGGING = "use.logging"
 USE_VU_METER = "use.vu.meter"
 METER = "meter"
@@ -127,6 +136,7 @@ class ConfigFileParser(object):
         self.meter_config[OUTPUT_DISPLAY] = c.getboolean(CURRENT, OUTPUT_DISPLAY)
         self.meter_config[OUTPUT_SERIAL] = c.getboolean(CURRENT, OUTPUT_SERIAL)
         self.meter_config[OUTPUT_I2C] = c.getboolean(CURRENT, OUTPUT_I2C)
+        self.meter_config[OUTPUT_PWM] = c.getboolean(CURRENT, OUTPUT_PWM)
         self.meter_config[USE_LOGGING] = c.getboolean(CURRENT, USE_LOGGING)
         
         self.meter_config[SERIAL_INTERFACE] = {}
@@ -141,6 +151,12 @@ class ConfigFileParser(object):
         self.meter_config[I2C_INTERFACE][RIGHT_CHANNEL_ADDRESS] = int(c.get(I2C_INTERFACE, RIGHT_CHANNEL_ADDRESS), 0)
         self.meter_config[I2C_INTERFACE][OUTPUT_SIZE] = c.getint(I2C_INTERFACE, OUTPUT_SIZE)
         self.meter_config[I2C_INTERFACE][UPDATE_PERIOD] = c.getfloat(I2C_INTERFACE, UPDATE_PERIOD)
+        
+        self.meter_config[PWM_INTERFACE] = {}
+        self.meter_config[PWM_INTERFACE][FREQUENCY] = c.getint(PWM_INTERFACE, FREQUENCY)
+        self.meter_config[PWM_INTERFACE][GPIO_PIN_LEFT] = c.getint(PWM_INTERFACE, GPIO_PIN_LEFT)
+        self.meter_config[PWM_INTERFACE][GPIO_PIN_RIGHT] = c.getint(PWM_INTERFACE, GPIO_PIN_RIGHT)
+        self.meter_config[PWM_INTERFACE][UPDATE_PERIOD] = c.getfloat(PWM_INTERFACE, UPDATE_PERIOD)
 
         screen_size = c.get(CURRENT, SCREEN_SIZE)
         self.meter_config[SCREEN_INFO] = {}

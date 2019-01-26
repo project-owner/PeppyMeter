@@ -1,4 +1,4 @@
-# Copyright 2016-2018 PeppyMeter peppy.player@gmail.com
+# Copyright 2016-2019 PeppyMeter peppy.player@gmail.com
 # 
 # This file is part of PeppyMeter.
 # 
@@ -26,9 +26,10 @@ from vumeter import Vumeter
 from datasource import DataSource, SOURCE_NOISE, SOURCE_PIPE
 from serialinterface import SerialInterface
 from i2cinterface import I2CInterface
+from pwminterface import PWMInterface
 from screensavermeter import ScreensaverMeter
 from configfileparser import ConfigFileParser, SCREEN_RECT, SCREEN_INFO, WIDTH, HEIGHT, DEPTH, \
-    OUTPUT_DISPLAY, OUTPUT_SERIAL, OUTPUT_I2C, DATA_SOURCE, TYPE, USE_LOGGING, USE_VU_METER
+    OUTPUT_DISPLAY, OUTPUT_SERIAL, OUTPUT_I2C, OUTPUT_PWM, DATA_SOURCE, TYPE, USE_LOGGING, USE_VU_METER
 
 class Peppymeter(ScreensaverMeter):
     """ Peppy Meter class """
@@ -80,6 +81,9 @@ class Peppymeter(ScreensaverMeter):
             
         if self.util.meter_config[OUTPUT_I2C]:
             self.outputs[OUTPUT_I2C] = I2CInterface(self.util.meter_config, self.data_source)
+            
+        if self.util.meter_config[OUTPUT_PWM]:
+            self.outputs[OUTPUT_PWM] = PWMInterface(self.util.meter_config, self.data_source)
 
         self.start_interface_outputs()
     
@@ -104,6 +108,14 @@ class Peppymeter(ScreensaverMeter):
         os.environ["SDL_MOUSEDEV"] = "/dev/input/touchscreen"
         os.environ["SDL_MOUSEDRV"] = "TSLIB"
         
+        if not self.util.meter_config[OUTPUT_DISPLAY]:
+            os.environ["SDL_VIDEODRIVER"] = "dummy"
+            os.environ["DISPLAY"] = ":0"
+            pygame.display.init()
+            pygame.font.init()
+            self.util.PYGAME_SCREEN = pygame.display.set_mode((1,1), pygame.DOUBLEBUF, depth)
+            return
+        
         if "win" not in sys.platform:
             pygame.display.init()
             pygame.mouse.set_visible(False)
@@ -124,6 +136,10 @@ class Peppymeter(ScreensaverMeter):
         if self.util.meter_config[OUTPUT_I2C]:
             self.i2c_interface = self.outputs[OUTPUT_I2C]
             self.i2c_interface.start_writing()
+            
+        if self.util.meter_config[OUTPUT_PWM]:
+            self.pwm_interface = self.outputs[OUTPUT_PWM]
+            self.pwm_interface.start_writing()
     
     def start(self):
         """ Start VU meter. This method called by Peppy Meter to start meter """
@@ -168,6 +184,8 @@ class Peppymeter(ScreensaverMeter):
             self.serial_interface.stop_writing()
         if self.util.meter_config[OUTPUT_I2C]:
             self.i2c_interface.stop_writing()
+        if self.util.meter_config[OUTPUT_PWM]:
+            self.pwm_interface.stop_writing()
         pygame.quit()            
         os._exit(0) 
        
@@ -176,7 +194,9 @@ if __name__ == "__main__":
     pm = Peppymeter(standalone=True)
     if pm.util.meter_config[DATA_SOURCE][TYPE] != SOURCE_PIPE:      
         pm.data_source.start_data_source()
+        
+    pm.init_display()
+        
     if pm.util.meter_config[OUTPUT_DISPLAY]:
-        pm.init_display()
         pm.start_display_output()    
           
