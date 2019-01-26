@@ -1,3 +1,8 @@
+## El Greco Edition 2018.11.12
+
+New features:
+* Added new native resolution 800x480px
+
 ## Goya Edition 2018.10.14
 
 New features:
