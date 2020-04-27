@@ -1,3 +1,7 @@
+## Hogarth Edition 2020.04.27
+
+* Fixed the issues with the testing data sources (sine, saw etc)
+
 ## Durer Edition 2018.01.26
 
 New features:
