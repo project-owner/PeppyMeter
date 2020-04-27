@@ -79,16 +79,16 @@ class DataSource(object):
             logging.debug("opening pipe...")
             self.pipe = os.open(self.pipe_name, os.O_RDONLY | os.O_NONBLOCK)
             logging.debug("pipe opened")
-        except Exception as e:
+        except:
             logging.debug("Cannot open named pipe: " + self.pipe_name)
             os._exit(0)
     
     def start_data_source(self):
         """ Start data source thread. """ 
-               
-        self.run_flag = True
-        thread = Thread(target=self.get_data)
-        thread.start()
+        if self.ds_type == SOURCE_PIPE:
+            self.run_flag = True
+            thread = Thread(target=self.get_data)
+            thread.start()
         
     def stop_data_source(self):
         """ Stop data source thread. """ 
@@ -97,12 +97,19 @@ class DataSource(object):
     
     def get_current_data(self):
         """ Return current data """
+
+        if self.ds_type != SOURCE_PIPE:
+            self.data = self.get_value()
         
         with self.lock:
             return self.data
         
     def get_current_left_channel_data(self):
         """ Return current left channel value """
+
+        if self.ds_type != SOURCE_PIPE:
+            self.data = self.get_value()
+            return self.data[0]
         
         with self.lock:
             if self.data and self.data[0]:
@@ -111,13 +118,21 @@ class DataSource(object):
     def get_current_right_channel_data(self):
         """ Return current right channel value """
         
+        if self.ds_type != SOURCE_PIPE:
+            self.data = self.get_value()
+            return self.data[1]
+
         with self.lock:
             if self.data and self.data[1]:
                 return self.data[1]
         
     def get_current_mono_channel_data(self):
         """ Return current mono value """
-        
+
+        if self.ds_type != SOURCE_PIPE:
+            self.data = self.get_value()
+            return self.data[2]
+
         with self.lock:
             if self.data and self.data[2]:
                 return self.data[2]
@@ -180,7 +195,7 @@ class DataSource(object):
     def get_triangle_value(self):
         """ Generate triangle shape signal. """
         
-        value = self.double_rng[self.v]       
+        value = self.double_rng[self.v]
         t = (value, value, value)
         self.v = (self.v + self.step) % (int(self.max_in_ui * 2 - 1))
         return t
