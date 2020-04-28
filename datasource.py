@@ -205,7 +205,7 @@ class DataSource(object):
                
         a = int(self.max_in_ui * ((1 + math.sin(math.radians(-90 + self.v)))/2))
         s = (a, a, a)
-        self.v = (self.v + self.step * 6) % 360
+        self.v = (self.v + self.step) % 360
         return s
     
     def get_pipe_value(self):
