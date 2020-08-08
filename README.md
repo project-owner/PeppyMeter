@@ -2,6 +2,7 @@
 
 * Refactored the named pipe data source functionality. The meters became responsive
 * Eliminated the startup delays
+* Introduced the smooth buffer which helped to make all indicator animations smooth.
 * Improved the meters' performance. Now the meters add about 7% to the CPU usage
 * Added file logging
 
