@@ -35,7 +35,7 @@ class Vumeter(ScreensaverMeter):
         self.meter = None
         
         self.meter_names = self.util.meter_config[METER_NAMES]
-        self.random_meter_interval = self.util.meter_config[RANDOM_METER_INTERVAL]
+        self.random_meter_interval = int(self.util.meter_config[RANDOM_METER_INTERVAL] / 0.033)
         self.data_source = data_source
         self.random_meter = False
         

@@ -1,7 +1,7 @@
 [bar]
 meter.type = linear
 channels = 2
-ui.refresh.period = 0.01
+ui.refresh.period = 0.033
 bgr.filename = bar-bgr.png
 indicator.filename = bar-indicator.png
 left.x = 195
@@ -16,10 +16,10 @@ step.width.overload = 47
 [blue]
 meter.type = circular
 channels = 1
-ui.refresh.period = 0.005
+ui.refresh.period = 0.033
 bgr.filename = blue-bgr.png
 indicator.filename = blue-needle.png
-steps.per.degree = 3
+steps.per.degree = 2
 start.angle = 45
 stop.angle = -45
 distance = 325
@@ -29,11 +29,11 @@ mono.origin.y = 605
 [vintage]
 meter.type = circular
 channels = 2
-ui.refresh.period = 0.002
+ui.refresh.period = 0.033
 bgr.filename = vintage-bgr.png
 fgr.filename = vintage-fgr.png
 indicator.filename = vintage-needle.png
-steps.per.degree = 3
+steps.per.degree = 2
 start.angle = 45
 stop.angle = -45
 distance = 72
@@ -45,7 +45,7 @@ right.origin.y = 322
 [dash]
 meter.type = linear
 channels = 2
-ui.refresh.period = 0.01
+ui.refresh.period = 0.033
 bgr.filename = dash-bgr.png
 indicator.filename = dash-indicator.png
 left.x = 49
@@ -60,7 +60,7 @@ step.width.overload = 56
 [gas]
 meter.type = linear
 channels = 2
-ui.refresh.period = 0.01
+ui.refresh.period = 0.033
 bgr.filename = gas-bgr.png
 indicator.filename = gas-indicator.png
 left.x = 76
@@ -73,10 +73,10 @@ step.width.regular = 10
 [rainbow]
 meter.type = circular
 channels = 1
-ui.refresh.period = 0.005
+ui.refresh.period = 0.033
 bgr.filename = rainbow-bgr.png
 indicator.filename = rainbow-needle.png
-steps.per.degree = 3
+steps.per.degree = 2
 start.angle = 39
 stop.angle = -39
 distance = 308
@@ -86,11 +86,11 @@ mono.origin.y = 582
 [grunge]
 meter.type = circular
 channels = 2
-ui.refresh.period = 0.002
+ui.refresh.period = 0.033
 bgr.filename = grunge-bgr.png
 fgr.filename = grunge-fgr.png
 indicator.filename = grunge-needle.png
-steps.per.degree = 3
+steps.per.degree = 2
 start.angle = 45
 stop.angle = -45
 distance = 50
@@ -102,7 +102,7 @@ right.origin.y = 300
 [royal]
 meter.type = circular
 channels = 1
-ui.refresh.period = 0.005
+ui.refresh.period = 0.033
 bgr.filename = royal-bgr.png
 fgr.filename = royal-fgr.png
 indicator.filename = royal-needle.png
@@ -116,11 +116,11 @@ mono.origin.y = 353
 [compass]
 meter.type = circular
 channels = 2
-ui.refresh.period = 0.002
+ui.refresh.period = 0.033
 bgr.filename = compass-bgr.png
 fgr.filename = compass-fgr.png
 indicator.filename = compass-needle.png
-steps.per.degree = 1
+steps.per.degree = 2
 start.angle = 55
 stop.angle = -55
 distance = 0

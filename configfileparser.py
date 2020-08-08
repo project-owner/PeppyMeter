@@ -1,4 +1,4 @@
-# Copyright 2016-2019 PeppyMeter peppy.player@gmail.com
+# Copyright 2016-2020 PeppyMeter peppy.player@gmail.com
 # 
 # This file is part of PeppyMeter.
 # 
@@ -22,7 +22,6 @@ from configparser import ConfigParser
 
 CURRENT = "current"
 SCREEN_INFO = "screen.info"
-PYGAME_SCREEN = "pygame.screen"
 WIDTH = "width"
 HEIGHT = "height"
 DEPTH = "depth"
@@ -51,8 +50,10 @@ FREQUENCY = "frequency"
 GPIO_PIN_LEFT = "gpio.pin.left"
 GPIO_PIN_RIGHT = "gpio.pin.right"
 
+SMOOTH_BUFFER_SIZE = "smooth.buffer.size"
 USE_LOGGING = "use.logging"
-USE_VU_METER = "use.vu.meter"
+USAGE = "usage"
+USE_VU_METER = "vu.meter"
 METER = "meter"
 DATA_SOURCE = "data.source"
 TYPE = "type"
@@ -138,6 +139,7 @@ class ConfigFileParser(object):
         self.meter_config[OUTPUT_I2C] = c.getboolean(CURRENT, OUTPUT_I2C)
         self.meter_config[OUTPUT_PWM] = c.getboolean(CURRENT, OUTPUT_PWM)
         self.meter_config[USE_LOGGING] = c.getboolean(CURRENT, USE_LOGGING)
+        self.meter_config[FRAME_RATE] = c.getint(CURRENT, FRAME_RATE)
         
         self.meter_config[SERIAL_INTERFACE] = {}
         self.meter_config[SERIAL_INTERFACE][DEVICE_NAME] = c.get(SERIAL_INTERFACE, DEVICE_NAME)
@@ -208,7 +210,8 @@ class ConfigFileParser(object):
         d[VOLUME_MAX_IN_PIPE] = config_file.getfloat(section, VOLUME_MAX_IN_PIPE)
         d[MONO_ALGORITHM] = config_file.get(section, MONO_ALGORITHM)
         d[STEREO_ALGORITHM] = config_file.get(section, STEREO_ALGORITHM)
-        d[STEP] = config_file.getint(section, STEP)        
+        d[STEP] = config_file.getint(section, STEP)
+        d[SMOOTH_BUFFER_SIZE] = config_file.getint(section, SMOOTH_BUFFER_SIZE)
         return d
     
     def get_linear_section(self, config_file, section, meter_type):

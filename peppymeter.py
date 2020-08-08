@@ -1,4 +1,4 @@
-# Copyright 2016-2019 PeppyMeter peppy.player@gmail.com
+# Copyright 2016-2020 PeppyMeter peppy.player@gmail.com
 # 
 # This file is part of PeppyMeter.
 # 
@@ -28,7 +28,7 @@ from serialinterface import SerialInterface
 from i2cinterface import I2CInterface
 from pwminterface import PWMInterface
 from screensavermeter import ScreensaverMeter
-from configfileparser import ConfigFileParser, SCREEN_RECT, SCREEN_INFO, WIDTH, HEIGHT, DEPTH, \
+from configfileparser import ConfigFileParser, SCREEN_RECT, SCREEN_INFO, WIDTH, HEIGHT, DEPTH, FRAME_RATE, \
     OUTPUT_DISPLAY, OUTPUT_SERIAL, OUTPUT_I2C, OUTPUT_PWM, DATA_SOURCE, TYPE, USE_LOGGING, USE_VU_METER
 
 class Peppymeter(ScreensaverMeter):
@@ -46,13 +46,15 @@ class Peppymeter(ScreensaverMeter):
         else:
             self.util = MeterUtil()
             
-        use_vu_meter = getattr(self.util, USE_VU_METER, None)
+        self.use_vu_meter = getattr(self.util, USE_VU_METER, None)
         
+        self.name = "peppymeter"
+
         base_path = "."
         if __package__:
             pkg_parts = __package__.split(".")
             if len(pkg_parts) > 0:
-                base_path = os.path.join(os.getcwd(), "screensaver", "peppymeter")
+                base_path = os.path.join(os.getcwd(), "screensaver", self.name)
         
         parser = ConfigFileParser(base_path)
         self.util.meter_config = parser.meter_config
@@ -60,17 +62,26 @@ class Peppymeter(ScreensaverMeter):
         
         if standalone:
             if self.util.meter_config[USE_LOGGING]:
-                logging.basicConfig(level=logging.NOTSET)            
+                log_handlers = []
+                try:
+                    log_handlers.append(logging.StreamHandler(sys.stdout))
+                    log_handlers.append(logging.FileHandler(filename="peppymeter.log", mode='w'))
+                    logging.basicConfig(
+                        level=logging.NOTSET,
+                        format='[%(asctime)s] {%(filename)s:%(lineno)d} %(levelname)s - %(message)s',
+                        handlers=log_handlers
+                    )
+                except:
+                    pass
             else:
                 logging.disable(logging.CRITICAL)
         
         # no VU Meter support for Windows
-        if "win" in sys.platform or use_vu_meter == False:
-            if self.util.meter_config[DATA_SOURCE][TYPE] == SOURCE_PIPE:
-                self.util.meter_config[DATA_SOURCE][TYPE] = SOURCE_NOISE
+        if "win" in sys.platform and self.util.meter_config[DATA_SOURCE][TYPE] == SOURCE_PIPE:
+            self.util.meter_config[DATA_SOURCE][TYPE] = SOURCE_NOISE
         
         self.data_source = DataSource(self.util.meter_config)
-        if self.util.meter_config[DATA_SOURCE][TYPE] == SOURCE_PIPE or use_vu_meter == True:      
+        if self.util.meter_config[DATA_SOURCE][TYPE] == SOURCE_PIPE or self.use_vu_meter == True:
             self.data_source.start_data_source()
         
         if self.util.meter_config[OUTPUT_DISPLAY]:
@@ -86,6 +97,7 @@ class Peppymeter(ScreensaverMeter):
             self.outputs[OUTPUT_PWM] = PWMInterface(self.util.meter_config, self.data_source)
 
         self.start_interface_outputs()
+        logging.debug("PeppyMeter initialized")
     
     def output_display(self, data_source):
         """ Initialize display
@@ -145,7 +157,7 @@ class Peppymeter(ScreensaverMeter):
         """ Start VU meter. This method called by Peppy Meter to start meter """
         
         pygame.event.clear()
-        if self.util.meter_config[DATA_SOURCE][TYPE] != SOURCE_PIPE:      
+        if self.util.meter_config[DATA_SOURCE][TYPE] == SOURCE_PIPE or self.use_vu_meter == True:
             self.data_source.start_data_source()
         self.meter.start()
         
@@ -164,11 +176,11 @@ class Peppymeter(ScreensaverMeter):
                     if (keys[pygame.K_LCTRL] or keys[pygame.K_RCTRL]) and event.key == pygame.K_c:
                         self.exit()                                                 
             self.refresh()
-            clock.tick(1)
+            clock.tick(self.util.meter_config[FRAME_RATE])
     
     def stop(self):
         """ Stop meter animation. """ 
-        if self.util.meter_config[DATA_SOURCE][TYPE] != SOURCE_PIPE:      
+        if not (self.util.meter_config[DATA_SOURCE][TYPE] == SOURCE_PIPE and self.use_vu_meter == True):
             self.data_source.stop_data_source()
         self.meter.stop()
     
@@ -176,6 +188,13 @@ class Peppymeter(ScreensaverMeter):
         """ Refresh meter. Used to switch from one random meter to another. """
         
         self.meter.refresh()
+
+    def set_volume(self, volume):
+        """ Set volume level.
+
+        :param volume: new volume level
+        """
+        self.data_source.volume = volume
     
     def exit(self):
         """ Exit program """
@@ -187,7 +206,14 @@ class Peppymeter(ScreensaverMeter):
         if self.util.meter_config[OUTPUT_PWM]:
             self.pwm_interface.stop_writing()
         pygame.quit()            
-        os._exit(0) 
+        os._exit(0)
+
+    def set_visible(self, flag):
+        """ Set visible/invisible flag.
+
+        :param flag: True - visible, False - invisible
+        """
+        pass
        
 if __name__ == "__main__":
     """ This is called by stand-alone PeppyMeter """
@@ -199,4 +225,3 @@ if __name__ == "__main__":
         
     if pm.util.meter_config[OUTPUT_DISPLAY]:
         pm.start_display_output()    
-          

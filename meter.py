@@ -1,4 +1,4 @@
-# Copyright 2016-2018 PeppyMeter peppy.player@gmail.com
+# Copyright 2016-2020 PeppyMeter peppy.player@gmail.com
 # 
 # This file is part of PeppyMeter.
 # 
@@ -16,10 +16,11 @@
 # along with PeppyMeter. If not, see <http://www.gnu.org/licenses/>.
 
 import os
+import time
 
 from component import Component
 from container import Container
-from configfileparser import TYPE_LINEAR, TYPE_CIRCULAR, SCREEN_RECT, SCREEN_INFO, SCREEN_SIZE, BASE_PATH
+from configfileparser import TYPE_LINEAR, TYPE_CIRCULAR, SCREEN_INFO, SCREEN_RECT, SCREEN_SIZE, BASE_PATH
 from linear import LinearAnimator
 from circular import CircularAnimator
 
@@ -47,6 +48,7 @@ class Meter(Container):
         self.ui_refresh_period = ui_refresh_period
         self.data_source = data_source       
         Container.__init__(self, util, self.rect, (0, 0, 0))
+        self.content = None
         self.max_volume = 100.0
         self.total_steps = 100
         self.origin_x = self.origin_y = 0
@@ -68,8 +70,8 @@ class Meter(Container):
         :param image_name: the name of the background image
         """
         img = self.load_image(image_name)
-        self.origin_x = (self.rect.w - img[1].get_size()[0])/2
-        self.origin_y = (self.rect.h - img[1].get_size()[1])/2
+        self.origin_x = 0
+        self.origin_y = 0
         self.meter_bounding_box = img[1].get_rect()
         self.meter_bounding_box.x = self.origin_x
         self.meter_bounding_box.y = self.origin_y
@@ -143,7 +145,7 @@ class Meter(Container):
         
         if self.needle_sprites:            
             if self.channels == 1:
-                self.components[1].content = self.needle_sprites[0]
+                self.components[1].content = None
                 self.components[1].bounding_box = self.mono_needle_rects[0]
             elif self.channels == 2:
                 self.components[1].content = self.needle_sprites[0]
@@ -207,11 +209,12 @@ class Meter(Container):
         
         if self.meter_type == TYPE_LINEAR:
             self.animator.run_flag = False
+            time.sleep(self.animator.ui_refresh_period)
         elif self.meter_type == TYPE_CIRCULAR:
             if self.channels == 2:
                 self.left.run_flag = False
                 self.right.run_flag = False
+                time.sleep(self.left.ui_refresh_period)
             else:
                 self.mono.run_flag = False
-
-    
+                time.sleep(self.mono.ui_refresh_period)
