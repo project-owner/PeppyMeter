@@ -1,3 +1,10 @@
+## Constable Edition 2020.08.08
+
+* Refactored the named pipe data source functionality. The meters became responsive
+* Eliminated the startup delays
+* Improved the meters' performance. Now the meters add about 7% to the CPU usage
+* Added file logging
+
 ## Hogarth Edition 2020.04.27
 
 * Fixed the issues with the testing data sources (sine, saw etc)
