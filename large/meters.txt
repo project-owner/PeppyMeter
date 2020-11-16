@@ -128,3 +128,121 @@ left.origin.x = 234
 left.origin.y = 240
 right.origin.x = 569
 right.origin.y = 240
+
+[gold]
+meter.type = circular
+channels = 1
+ui.refresh.period = 0.033
+bgr.filename = gold-bgr.png
+fgr.filename = gold-fgr.png
+indicator.filename = gold-needle.png
+steps.per.degree = 2
+start.angle = 44
+stop.angle = -44
+distance = 200
+mono.origin.x = 409
+mono.origin.y = 420
+
+[black-white]
+meter.type = circular
+channels = 1
+ui.refresh.period = 0.033
+bgr.filename = black-white-bgr.png
+indicator.filename = black-white-needle.png
+steps.per.degree = 2
+start.angle = 45
+stop.angle = -45
+distance = 276
+mono.origin.x = 406
+mono.origin.y = 573
+
+[white-red]
+meter.type = circular
+channels = 1
+ui.refresh.period = 0.033
+bgr.filename = white-red-bgr.png
+indicator.filename = white-red-needle.png
+steps.per.degree = 2
+start.angle = 39
+stop.angle = -39
+distance = 230
+mono.origin.x = 402
+mono.origin.y = 522
+
+[orange]
+meter.type = circular
+channels = 1
+ui.refresh.period = 0.033
+bgr.filename = orange-bgr.png
+fgr.filename = orange-fgr.png
+indicator.filename = orange-needle.png
+steps.per.degree = 2
+start.angle = 47
+stop.angle = -47
+distance = 126
+mono.origin.x = 400
+mono.origin.y = 394
+
+[blue-2]
+meter.type = circular
+channels = 2
+ui.refresh.period = 0.033
+bgr.filename = blue-2-bgr.png
+fgr.filename = blue-2-fgr.png
+indicator.filename = blue-2-needle.png
+steps.per.degree = 2
+start.angle = 45
+stop.angle = -45
+distance = 130
+left.origin.x = 197
+left.origin.y = 388
+right.origin.x = 585
+right.origin.y = 388
+
+[emerald]
+meter.type = circular
+channels = 2
+ui.refresh.period = 0.033
+bgr.filename = emerald-bgr.png
+fgr.filename = emerald-fgr.png
+indicator.filename = emerald-needle.png
+steps.per.degree = 2
+start.angle = 47
+stop.angle = -47
+distance = 82
+left.origin.x = 208
+left.origin.y = 354
+right.origin.x = 584
+right.origin.y = 354
+
+[red]
+meter.type = circular
+channels = 2
+ui.refresh.period = 0.033
+bgr.filename = red-bgr.png
+fgr.filename = red-fgr.png
+indicator.filename = red-needle.png
+steps.per.degree = 2
+start.angle = 43
+stop.angle = -43
+distance = 140
+left.origin.x = 215
+left.origin.y = 371
+right.origin.x = 584
+right.origin.y = 371
+
+[tube]
+meter.type = circular
+channels = 2
+ui.refresh.period = 0.033
+bgr.filename = tube-bgr.png
+fgr.filename = tube-fgr.png
+indicator.filename = tube-needle.png
+steps.per.degree = 2
+start.angle = 35
+stop.angle = -35
+distance = 84
+left.origin.x = 178
+left.origin.y = 323
+right.origin.x = 617
+right.origin.y = 323

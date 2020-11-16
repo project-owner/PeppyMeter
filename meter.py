@@ -118,8 +118,8 @@ class Meter(Container):
         """               
         c = Component(self.util)
         c.content = image
-        c.content_x = x
-        c.content_y = y
+        c.content_x = rect.x
+        c.content_y = rect.y
         if rect: c.bounding_box = rect
         self.add_component(c)
         return c
