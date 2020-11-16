@@ -1,6 +1,6 @@
 ## Hokusai Edition 2020.11.15
 
-* Adde new meters to the large, medium and small groups.
+* Added new meters to the large, medium and small groups.
 * Added new group 'wide' with resolution 1280x400px.
 
 ## Constable Edition 2020.08.08
