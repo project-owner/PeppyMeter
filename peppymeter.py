@@ -130,7 +130,7 @@ class Peppymeter(ScreensaverMeter):
             return
         
         if "win" not in sys.platform:
-            if self.util.meter_config[SDL_ENV_VARS][SDL_VIDEO_DRIVER] is not "dummy":
+            if not self.util.meter_config[SDL_ENV_VARS][SDL_VIDEO_DRIVER] == "dummy":
                 os.environ["SDL_VIDEODRIVER"] = self.util.meter_config[SDL_ENV_VARS][SDL_VIDEO_DRIVER]
                 os.environ["DISPLAY"] = self.util.meter_config[SDL_ENV_VARS][SDL_VIDEO_DISPLAY]
             pygame.display.init()
