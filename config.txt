@@ -9,6 +9,13 @@ output.pwm = False
 use.logging = False
 frame.rate = 30
 
+[sdl.env]
+framebuffer.device = /dev/fb1
+mouse.device = /dev/input/touchscreen
+mouse.driver = TSLIB
+video.driver = dummy
+video.display = :0
+
 [serial.interface]
 device.name = /dev/serial0
 baud.rate = 9600
