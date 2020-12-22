@@ -29,7 +29,8 @@ from i2cinterface import I2CInterface
 from pwminterface import PWMInterface
 from screensavermeter import ScreensaverMeter
 from configfileparser import ConfigFileParser, SCREEN_RECT, SCREEN_INFO, WIDTH, HEIGHT, DEPTH, FRAME_RATE, \
-    OUTPUT_DISPLAY, OUTPUT_SERIAL, OUTPUT_I2C, OUTPUT_PWM, DATA_SOURCE, TYPE, USE_LOGGING, USE_VU_METER
+    OUTPUT_DISPLAY, OUTPUT_SERIAL, OUTPUT_I2C, OUTPUT_PWM, DATA_SOURCE, TYPE, USE_LOGGING, USE_VU_METER, \
+    SDL_ENV_VARS, SDL_FB_DEVICE, SDL_MOUSE_DEVICE, SDL_MOUSE_DRIVER, SDL_VIDEO_DRIVER, SDL_VIDEO_DISPLAY
 
 class Peppymeter(ScreensaverMeter):
     """ Peppy Meter class """
@@ -116,19 +117,22 @@ class Peppymeter(ScreensaverMeter):
         screen_h = self.util.meter_config[SCREEN_INFO][HEIGHT]
         depth = self.util.meter_config[SCREEN_INFO][DEPTH]
         
-        os.environ["SDL_FBDEV"] = "/dev/fb1"
-        os.environ["SDL_MOUSEDEV"] = "/dev/input/touchscreen"
-        os.environ["SDL_MOUSEDRV"] = "TSLIB"
+        os.environ["SDL_FBDEV"] = self.util.meter_config[SDL_ENV_VARS][SDL_FB_DEVICE]
+        os.environ["SDL_MOUSEDEV"] = self.util.meter_config[SDL_ENV_VARS][SDL_MOUSE_DEVICE]
+        os.environ["SDL_MOUSEDRV"] = self.util.meter_config[SDL_ENV_VARS][SDL_MOUSE_DRIVER]
         
         if not self.util.meter_config[OUTPUT_DISPLAY]:
-            os.environ["SDL_VIDEODRIVER"] = "dummy"
-            os.environ["DISPLAY"] = ":0"
+            os.environ["SDL_VIDEODRIVER"] = self.util.meter_config[SDL_ENV_VARS][SDL_VIDEO_DRIVER]
+            os.environ["DISPLAY"] = self.util.meter_config[SDL_ENV_VARS][SDL_VIDEO_DISPLAY]
             pygame.display.init()
             pygame.font.init()
             self.util.PYGAME_SCREEN = pygame.display.set_mode((1,1), pygame.DOUBLEBUF, depth)
             return
         
         if "win" not in sys.platform:
+            if not self.util.meter_config[SDL_ENV_VARS][SDL_VIDEO_DRIVER] == "dummy":
+                os.environ["SDL_VIDEODRIVER"] = self.util.meter_config[SDL_ENV_VARS][SDL_VIDEO_DRIVER]
+                os.environ["DISPLAY"] = self.util.meter_config[SDL_ENV_VARS][SDL_VIDEO_DISPLAY]
             pygame.display.init()
             pygame.mouse.set_visible(False)
         else:            
@@ -218,7 +222,7 @@ class Peppymeter(ScreensaverMeter):
 if __name__ == "__main__":
     """ This is called by stand-alone PeppyMeter """
     pm = Peppymeter(standalone=True)
-    if pm.util.meter_config[DATA_SOURCE][TYPE] != SOURCE_PIPE:      
+    if pm.util.meter_config[DATA_SOURCE][TYPE] != SOURCE_PIPE:
         pm.data_source.start_data_source()
         
     pm.init_display()

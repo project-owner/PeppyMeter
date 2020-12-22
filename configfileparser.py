@@ -50,6 +50,13 @@ FREQUENCY = "frequency"
 GPIO_PIN_LEFT = "gpio.pin.left"
 GPIO_PIN_RIGHT = "gpio.pin.right"
 
+SDL_ENV_VARS = "sdl.env"
+SDL_FB_DEVICE = "framebuffer.device"
+SDL_MOUSE_DEVICE = "mouse.device"
+SDL_MOUSE_DRIVER = "mouse.driver"
+SDL_VIDEO_DRIVER = "video.driver"
+SDL_VIDEO_DISPLAY = "video.display"
+
 SMOOTH_BUFFER_SIZE = "smooth.buffer.size"
 USE_LOGGING = "use.logging"
 USAGE = "usage"
@@ -162,6 +169,8 @@ class ConfigFileParser(object):
         self.meter_config[PWM_INTERFACE][GPIO_PIN_LEFT] = c.getint(PWM_INTERFACE, GPIO_PIN_LEFT)
         self.meter_config[PWM_INTERFACE][GPIO_PIN_RIGHT] = c.getint(PWM_INTERFACE, GPIO_PIN_RIGHT)
         self.meter_config[PWM_INTERFACE][UPDATE_PERIOD] = c.getfloat(PWM_INTERFACE, UPDATE_PERIOD)
+
+        self.meter_config[SDL_ENV_VARS] = self.get_sdl_environment_section(c, SDL_ENV_VARS)
 
         screen_size = c.get(CURRENT, SCREEN_SIZE)
         self.meter_config[SCREEN_INFO] = {}
@@ -283,3 +292,16 @@ class ConfigFileParser(object):
             d[FGR_FILENAME] = None
         d[INDICATOR_FILENAME] = config_file.get(section, INDICATOR_FILENAME)
 
+    def get_sdl_environment_section(self, config_file, section):
+        """ Parser for SDL library OS environment section
+
+        :param config_file: configuration file
+        :param section: section name
+        """
+        d = {}
+        d[SDL_FB_DEVICE] = config_file.get(section, SDL_FB_DEVICE)
+        d[SDL_MOUSE_DEVICE] = config_file.get(section, SDL_MOUSE_DEVICE)
+        d[SDL_MOUSE_DRIVER] = config_file.get(section, SDL_MOUSE_DRIVER)
+        d[SDL_VIDEO_DRIVER] = config_file.get(section, SDL_VIDEO_DRIVER)
+        d[SDL_VIDEO_DISPLAY] = config_file.get(section, SDL_VIDEO_DISPLAY)
+        return d
