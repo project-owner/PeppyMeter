@@ -15,6 +15,8 @@
 # You should have received a copy of the GNU General Public License
 # along with PeppyMeter. If not, see <http://www.gnu.org/licenses/>.
 
+import logging
+
 from meter import Meter
 from maskfactory import MaskFactory
 from needlefactory import NeedleFactory
@@ -38,7 +40,12 @@ class MeterFactory(object):
         """ Dispatcher method """ 
                
         meter_name = self.meter_config[METER]
-        meter_config_section = self.meter_config[meter_name]
+        try:
+            meter_config_section = self.meter_config[meter_name]
+        except:
+            logging.debug(f"Meter '{meter_name}' not found for size '{self.meter_config[SCREEN_INFO][SCREEN_SIZE]}'")
+            self.util.exit_function()
+
         if meter_config_section[METER_TYPE] == TYPE_LINEAR:
             return self.create_linear_meter(meter_name)
         elif meter_config_section[METER_TYPE] == TYPE_CIRCULAR:

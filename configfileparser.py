@@ -50,12 +50,13 @@ FREQUENCY = "frequency"
 GPIO_PIN_LEFT = "gpio.pin.left"
 GPIO_PIN_RIGHT = "gpio.pin.right"
 
-SDL_ENV_VARS = "sdl.env"
-SDL_FB_DEVICE = "framebuffer.device"
-SDL_MOUSE_DEVICE = "mouse.device"
-SDL_MOUSE_DRIVER = "mouse.driver"
-SDL_VIDEO_DRIVER = "video.driver"
-SDL_VIDEO_DISPLAY = "video.display"
+SDL_ENV = "sdl.env"
+FRAMEBUFFER_DEVICE = "framebuffer.device"
+MOUSE_DEVICE = "mouse.device"
+MOUSE_DRIVER = "mouse.driver"
+VIDEO_DRIVER = "video.driver"
+VIDEO_DISPLAY = "video.display"
+DOUBLE_BUFFER = "double.buffer"
 
 SMOOTH_BUFFER_SIZE = "smooth.buffer.size"
 USE_LOGGING = "use.logging"
@@ -140,7 +141,6 @@ class ConfigFileParser(object):
         self.meter_config[BASE_PATH] = base_path 
         peppy_meter_path = os.path.join(base_path, FILE_CONFIG)
         c.read(peppy_meter_path)
-        meter_names = list()
         
         self.meter_config[METER] = c.get(CURRENT, METER)
         self.meter_config[RANDOM_METER_INTERVAL] = c.getint(CURRENT, RANDOM_METER_INTERVAL)
@@ -170,7 +170,7 @@ class ConfigFileParser(object):
         self.meter_config[PWM_INTERFACE][GPIO_PIN_RIGHT] = c.getint(PWM_INTERFACE, GPIO_PIN_RIGHT)
         self.meter_config[PWM_INTERFACE][UPDATE_PERIOD] = c.getfloat(PWM_INTERFACE, UPDATE_PERIOD)
 
-        self.meter_config[SDL_ENV_VARS] = self.get_sdl_environment_section(c, SDL_ENV_VARS)
+        self.meter_config[SDL_ENV] = self.get_sdl_environment_section(c, SDL_ENV)
 
         screen_size = c.get(CURRENT, SCREEN_SIZE)
         self.meter_config[SCREEN_INFO] = {}
@@ -191,23 +191,33 @@ class ConfigFileParser(object):
             self.meter_config[SCREEN_INFO][WIDTH] = WIDE_WIDTH
             self.meter_config[SCREEN_INFO][HEIGHT] = WIDE_HEIGHT
         else:
-            logging.debug("Not supported screen size")
+            print(f"Not supported screen size: '{screen_size}'")
             os._exit(0)
 
         self.meter_config[DATA_SOURCE] = self.get_data_source_section(c, DATA_SOURCE)
         
         meter_config_path = os.path.join(base_path, screen_size, FILE_METER_CONFIG)
+        if not os.path.exists(meter_config_path):
+            print(f"Cannot read file: {meter_config_path}")
+            os._exit(0)
+
         c = ConfigParser()
         c.read(meter_config_path)
+        available_meter_names = list()
         
         for section in c.sections():
-            meter_names.append(section)
+            available_meter_names.append(section)
             meter_type = c.get(section, METER_TYPE)
             if meter_type == TYPE_LINEAR:
                 self.meter_config[section] = self.get_linear_section(c, section, meter_type)
             elif meter_type == TYPE_CIRCULAR:
                 self.meter_config[section] = self.get_circular_section(c, section, meter_type)
-        self.meter_config[METER_NAMES] = meter_names
+
+        if "," in self.meter_config[METER]:
+            names = self.meter_config[METER].split(",")
+            available_meter_names = list(map(str.strip, names))
+
+        self.meter_config[METER_NAMES] = available_meter_names
     
     def get_data_source_section(self, config_file, section):
         """ Parser for data source section
@@ -299,9 +309,10 @@ class ConfigFileParser(object):
         :param section: section name
         """
         d = {}
-        d[SDL_FB_DEVICE] = config_file.get(section, SDL_FB_DEVICE)
-        d[SDL_MOUSE_DEVICE] = config_file.get(section, SDL_MOUSE_DEVICE)
-        d[SDL_MOUSE_DRIVER] = config_file.get(section, SDL_MOUSE_DRIVER)
-        d[SDL_VIDEO_DRIVER] = config_file.get(section, SDL_VIDEO_DRIVER)
-        d[SDL_VIDEO_DISPLAY] = config_file.get(section, SDL_VIDEO_DISPLAY)
+        d[FRAMEBUFFER_DEVICE] = config_file.get(section, FRAMEBUFFER_DEVICE)
+        d[MOUSE_DEVICE] = config_file.get(section, MOUSE_DEVICE)
+        d[MOUSE_DRIVER] = config_file.get(section, MOUSE_DRIVER)
+        d[VIDEO_DRIVER] = config_file.get(section, VIDEO_DRIVER)
+        d[VIDEO_DISPLAY] = config_file.get(section, VIDEO_DISPLAY)
+        d[DOUBLE_BUFFER] = config_file.getboolean(section, DOUBLE_BUFFER)
         return d

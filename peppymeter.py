@@ -30,7 +30,7 @@ from pwminterface import PWMInterface
 from screensavermeter import ScreensaverMeter
 from configfileparser import ConfigFileParser, SCREEN_RECT, SCREEN_INFO, WIDTH, HEIGHT, DEPTH, FRAME_RATE, \
     OUTPUT_DISPLAY, OUTPUT_SERIAL, OUTPUT_I2C, OUTPUT_PWM, DATA_SOURCE, TYPE, USE_LOGGING, USE_VU_METER, \
-    SDL_ENV_VARS, SDL_FB_DEVICE, SDL_MOUSE_DEVICE, SDL_MOUSE_DRIVER, SDL_VIDEO_DRIVER, SDL_VIDEO_DISPLAY
+    SDL_ENV, FRAMEBUFFER_DEVICE, MOUSE_DEVICE, MOUSE_DRIVER, VIDEO_DRIVER, VIDEO_DISPLAY, DOUBLE_BUFFER
 
 class Peppymeter(ScreensaverMeter):
     """ Peppy Meter class """
@@ -59,6 +59,7 @@ class Peppymeter(ScreensaverMeter):
         
         parser = ConfigFileParser(base_path)
         self.util.meter_config = parser.meter_config
+        self.util.exit_function = self.exit
         self.outputs = {}
         
         if standalone:
@@ -113,33 +114,42 @@ class Peppymeter(ScreensaverMeter):
         return meter
     
     def init_display(self):
+        """ Initialize Pygame display """
+
         screen_w = self.util.meter_config[SCREEN_INFO][WIDTH]
         screen_h = self.util.meter_config[SCREEN_INFO][HEIGHT]
         depth = self.util.meter_config[SCREEN_INFO][DEPTH]
         
-        os.environ["SDL_FBDEV"] = self.util.meter_config[SDL_ENV_VARS][SDL_FB_DEVICE]
-        os.environ["SDL_MOUSEDEV"] = self.util.meter_config[SDL_ENV_VARS][SDL_MOUSE_DEVICE]
-        os.environ["SDL_MOUSEDRV"] = self.util.meter_config[SDL_ENV_VARS][SDL_MOUSE_DRIVER]
+        os.environ["SDL_FBDEV"] = self.util.meter_config[SDL_ENV][FRAMEBUFFER_DEVICE]
+        os.environ["SDL_MOUSEDEV"] = self.util.meter_config[SDL_ENV][MOUSE_DEVICE]
+        os.environ["SDL_MOUSEDRV"] = self.util.meter_config[SDL_ENV][MOUSE_DRIVER]
         
         if not self.util.meter_config[OUTPUT_DISPLAY]:
-            os.environ["SDL_VIDEODRIVER"] = self.util.meter_config[SDL_ENV_VARS][SDL_VIDEO_DRIVER]
-            os.environ["DISPLAY"] = self.util.meter_config[SDL_ENV_VARS][SDL_VIDEO_DISPLAY]
+            os.environ["SDL_VIDEODRIVER"] = self.util.meter_config[SDL_ENV][VIDEO_DRIVER]
+            os.environ["DISPLAY"] = self.util.meter_config[SDL_ENV][VIDEO_DISPLAY]
             pygame.display.init()
             pygame.font.init()
-            self.util.PYGAME_SCREEN = pygame.display.set_mode((1,1), pygame.DOUBLEBUF, depth)
+            if self.util.meter_config[SDL_ENV][DOUBLE_BUFFER]:
+                self.util.PYGAME_SCREEN = pygame.display.set_mode((1,1), pygame.DOUBLEBUF, depth)
+            else:
+                self.util.PYGAME_SCREEN = pygame.display.set_mode((1,1))
             return
         
         if "win" not in sys.platform:
-            if not self.util.meter_config[SDL_ENV_VARS][SDL_VIDEO_DRIVER] == "dummy":
-                os.environ["SDL_VIDEODRIVER"] = self.util.meter_config[SDL_ENV_VARS][SDL_VIDEO_DRIVER]
-                os.environ["DISPLAY"] = self.util.meter_config[SDL_ENV_VARS][SDL_VIDEO_DISPLAY]
+            if not self.util.meter_config[SDL_ENV][VIDEO_DRIVER] == "dummy":
+                os.environ["SDL_VIDEODRIVER"] = self.util.meter_config[SDL_ENV][VIDEO_DRIVER]
+                os.environ["DISPLAY"] = self.util.meter_config[SDL_ENV][VIDEO_DISPLAY]
             pygame.display.init()
             pygame.mouse.set_visible(False)
         else:            
             pygame.init()
             pygame.display.set_caption("Peppy Meter")
-            
-        self.util.PYGAME_SCREEN = pygame.display.set_mode((screen_w, screen_h), pygame.DOUBLEBUF, depth)        
+
+        if self.util.meter_config[SDL_ENV][DOUBLE_BUFFER]:
+            self.util.PYGAME_SCREEN = pygame.display.set_mode((screen_w, screen_h), pygame.DOUBLEBUF, depth)
+        else:
+            self.util.PYGAME_SCREEN = pygame.display.set_mode((screen_w, screen_h))
+
         self.util.meter_config[SCREEN_RECT] = pygame.Rect(0, 0, screen_w, screen_h) 
     
     def start_interface_outputs(self):

@@ -38,10 +38,14 @@ class Vumeter(ScreensaverMeter):
         self.random_meter_interval = int(self.util.meter_config[RANDOM_METER_INTERVAL] / 0.033)
         self.data_source = data_source
         self.random_meter = False
+        self.list_meter = False
+        self.list_meter_index = 0
         
         if self.util.meter_config[METER] == "random":
             self.random_meter = True
-            self.random_meter_names = copy.copy(self.meter_names)            
+            self.random_meter_names = copy.copy(self.meter_names)
+        elif "," in self.util.meter_config[METER]:
+            self.list_meter = True
             
         self.meter = None
         self.current_volume = 100.0
@@ -50,7 +54,7 @@ class Vumeter(ScreensaverMeter):
     def get_meter(self):
         """ Creates meter using meter factory. """  
               
-        if self.meter and not self.random_meter:
+        if self.meter and not (self.random_meter or self.list_meter):
             return self.meter
         
         if self.random_meter:
@@ -59,6 +63,11 @@ class Vumeter(ScreensaverMeter):
             i = randrange(0, len(self.random_meter_names))     
             self.util.meter_config[METER] = self.random_meter_names[i]
             del self.random_meter_names[i]
+        elif self.list_meter:
+            if self.list_meter_index == len(self.meter_names):
+                self.list_meter_index = 0
+            self.util.meter_config[METER] = self.meter_names[self.list_meter_index]
+            self.list_meter_index += 1
             
         factory = MeterFactory(self.util, self.util.meter_config, self.data_source)
         return factory.create_meter()        
@@ -86,7 +95,7 @@ class Vumeter(ScreensaverMeter):
     def refresh(self):
         """ Refresh meter. Used to update random meter. """ 
                
-        if self.random_meter and self.seconds == self.random_meter_interval:
+        if (self.random_meter or self.list_meter) and self.seconds == self.random_meter_interval:
             self.seconds = 0
             self.stop()
             time.sleep(0.2) # let threads stop

@@ -15,6 +15,7 @@ mouse.device = /dev/input/touchscreen
 mouse.driver = TSLIB
 video.driver = dummy
 video.display = :0
+double.buffer = True
 
 [serial.interface]
 device.name = /dev/serial0
