@@ -1,3 +1,8 @@
+## Hiroshige Edition 2021.04.18
+
+* Now the meters to display can be defined as a comma separated names
+* It's possible to enable/disable Double Buffering in the configuration file
+
 ## Hokusai Edition 2020.11.15
 
 * Added 8 new meters to the large, medium and small groups.
