@@ -1,4 +1,4 @@
-# Copyright 2016-2018 PeppyMeter peppy.player@gmail.com
+# Copyright 2016-2021 PeppyMeter peppy.player@gmail.com
 # 
 # This file is part of PeppyMeter.
 # 
