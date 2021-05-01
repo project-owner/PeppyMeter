@@ -33,6 +33,7 @@ class Vumeter(ScreensaverMeter):
         self.util = util
         self.update_period = 1
         self.meter = None
+        self.meter_cache = {}
         
         self.meter_names = self.util.meter_config[METER_NAMES]
         self.random_meter_interval = int(self.util.meter_config[RANDOM_METER_INTERVAL] / 0.033)
@@ -69,8 +70,16 @@ class Vumeter(ScreensaverMeter):
             self.util.meter_config[METER] = self.meter_names[self.list_meter_index]
             self.list_meter_index += 1
             
+        try:
+            return self.meter_cache[self.util.meter_config[METER]]
+        except:
+            pass
+
         factory = MeterFactory(self.util, self.util.meter_config, self.data_source)
-        return factory.create_meter()        
+        m = factory.create_meter()
+        self.meter_cache[self.util.meter_config[METER]] = m
+
+        return m
     
     def set_volume(self, volume):
         """ Set volume level 
