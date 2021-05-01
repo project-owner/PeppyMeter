@@ -189,7 +189,6 @@ class Meter(Container):
 
     def start_circular_animator(self, component, needle_rects, get_data_method):
         a = CircularAnimator(self.data_source, component, self, self.ui_refresh_period, needle_rects, get_data_method) 
-        a.setDaemon(True)
         a.start()        
         return a
     
@@ -200,7 +199,6 @@ class Meter(Container):
         :param rects: list of needle bounding boxes
         """
         a = LinearAnimator(self.data_source, components, self, self.ui_refresh_period)
-        a.setDaemon(True)
         a.start()        
         return a
     
@@ -210,11 +208,15 @@ class Meter(Container):
         if self.meter_type == TYPE_LINEAR:
             self.animator.run_flag = False
             time.sleep(self.animator.ui_refresh_period)
+            self.animator.join()
         elif self.meter_type == TYPE_CIRCULAR:
             if self.channels == 2:
                 self.left.run_flag = False
                 self.right.run_flag = False
                 time.sleep(self.left.ui_refresh_period)
+                self.left.join()
+                self.right.join()
             else:
                 self.mono.run_flag = False
                 time.sleep(self.mono.ui_refresh_period)
+                self.mono.join()
