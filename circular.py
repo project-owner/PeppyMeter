@@ -1,4 +1,4 @@
-# Copyright 2016-2020 PeppyMeter peppy.player@gmail.com
+# Copyright 2016-2021 PeppyMeter peppy.player@gmail.com
 # 
 # This file is part of PeppyMeter.
 # 
@@ -54,6 +54,12 @@ class CircularAnimator(Thread):
             n = self.set_sprite(volume)
             time.sleep(self.ui_refresh_period)
             self.previous_index = int(n)
+
+    def stop_thread(self):
+        """ Stop thread """
+
+        self.run_flag = False
+        time.sleep(self.ui_refresh_period * 2)
 
     def set_sprite(self, volume, init=False):
         if volume == None:

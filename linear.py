@@ -1,4 +1,4 @@
-# Copyright 2016-2018 PeppyMeter peppy.player@gmail.com
+# Copyright 2016-2021 PeppyMeter peppy.player@gmail.com
 # 
 # This file is part of PeppyMeter.
 # 
@@ -57,7 +57,13 @@ class LinearAnimator(Thread):
                 pass
             
             time.sleep(self.ui_refresh_period)
-            
+
+    def stop_thread(self):
+        """ Stop thread """
+
+        self.run_flag = False
+        time.sleep(self.ui_refresh_period * 2)
+
     def update_channel(self, volume, component, previous_rect, previous_volume):
         """ Update channel
         

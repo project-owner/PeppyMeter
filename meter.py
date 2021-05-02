@@ -1,4 +1,4 @@
-# Copyright 2016-2020 PeppyMeter peppy.player@gmail.com
+# Copyright 2016-2021 PeppyMeter peppy.player@gmail.com
 # 
 # This file is part of PeppyMeter.
 # 
@@ -16,7 +16,6 @@
 # along with PeppyMeter. If not, see <http://www.gnu.org/licenses/>.
 
 import os
-import time
 
 from component import Component
 from container import Container
@@ -163,13 +162,17 @@ class Meter(Container):
         self.update()
         rects = (self.left_needle_rects, self.right_needle_rects, self.mono_needle_rects)
         if self.meter_type == TYPE_LINEAR:
-            self.animator = self.start_linear_animator(self.components, rects)
+            self.animator = LinearAnimator(self.data_source, self.components, self, self.ui_refresh_period)
+            self.animator.start()
         elif self.meter_type == TYPE_CIRCULAR:
             if self.channels == 2:
-                self.left = self.start_circular_animator(self.components[1], rects[0], self.data_source.get_current_left_channel_data)
-                self.right = self.start_circular_animator(self.components[2], rects[1], self.data_source.get_current_right_channel_data)
+                self.left = CircularAnimator(self.data_source, self.components[1], self, self.ui_refresh_period, rects[0], self.data_source.get_current_left_channel_data)
+                self.right = CircularAnimator(self.data_source, self.components[2], self, self.ui_refresh_period, rects[1], self.data_source.get_current_right_channel_data)
+                self.left.start()
+                self.right.start()
             else:
-                self.mono = self.start_circular_animator(self.components[1], rects[2], self.data_source.get_current_mono_channel_data)
+                self.mono = CircularAnimator(self.data_source, self.components[1], self, self.ui_refresh_period, rects[2], self.data_source.get_current_mono_channel_data)
+                self.mono.start()
 
     def reset_bgr_fgr(self, comp):
         """ Reset background or foreground bounding box  
@@ -186,33 +189,19 @@ class Meter(Container):
         comp.bounding_box.x = comp.content_x
         comp.bounding_box.y = comp.content_y
         comp.bounding_box.w = 1
-
-    def start_circular_animator(self, component, needle_rects, get_data_method):
-        a = CircularAnimator(self.data_source, component, self, self.ui_refresh_period, needle_rects, get_data_method) 
-        a.start()        
-        return a
-    
-    def start_linear_animator(self, components, rects):
-        """ Start meter animation
-        
-        :param component: component to animate
-        :param rects: list of needle bounding boxes
-        """
-        a = LinearAnimator(self.data_source, components, self, self.ui_refresh_period)
-        a.start()        
-        return a
     
     def stop(self):
         """ Stop meter animation """
         
         if self.meter_type == TYPE_LINEAR:
-            self.animator.run_flag = False
-            time.sleep(self.animator.ui_refresh_period)
+            self.animator.stop_thread()
+            self.animator = None
         elif self.meter_type == TYPE_CIRCULAR:
             if self.channels == 2:
-                self.left.run_flag = False
-                self.right.run_flag = False
-                time.sleep(self.left.ui_refresh_period)
+                self.left.stop_thread()
+                self.right.stop_thread()
+                self.left = None
+                self.right = None
             else:
-                self.mono.run_flag = False
-                time.sleep(self.mono.ui_refresh_period)
+                self.mono.stop_thread()
+                self.mono = None
