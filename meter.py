@@ -62,6 +62,7 @@ class Meter(Container):
         self.right_needle_rects = None
         self.masks = None
         self.channels = 1
+        self.cached = False
 
     def add_background(self, image_name):
         """ Position and add background image.
@@ -142,19 +143,20 @@ class Meter(Container):
         
         self.reset_bgr_fgr(self.bgr)
         
-        if self.needle_sprites:            
-            if self.channels == 1:
-                self.components[1].content = None
-                self.components[1].bounding_box = self.mono_needle_rects[0]
-            elif self.channels == 2:
-                self.components[1].content = self.needle_sprites[0]
-                self.components[1].bounding_box = self.left_needle_rects[0]
-                self.components[2].content = self.needle_sprites[0]
-                self.components[2].bounding_box = self.right_needle_rects[0]
-        
-        if self.masks:
-            self.reset_mask(self.components[1])
-            self.reset_mask(self.components[2])
+        if not self.cached:
+            if self.needle_sprites:
+                if self.channels == 1:
+                    self.components[1].content = None
+                    self.components[1].bounding_box = self.mono_needle_rects[0]
+                elif self.channels == 2:
+                    self.components[1].content = self.needle_sprites[0]
+                    self.components[1].bounding_box = self.left_needle_rects[0]
+                    self.components[2].content = self.needle_sprites[0]
+                    self.components[2].bounding_box = self.right_needle_rects[0]
+
+            if self.masks:
+                self.reset_mask(self.components[1])
+                self.reset_mask(self.components[2])
         
         if self.fgr: self.reset_bgr_fgr(self.fgr)
         

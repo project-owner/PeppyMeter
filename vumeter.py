@@ -71,7 +71,9 @@ class Vumeter(ScreensaverMeter):
             self.list_meter_index += 1
             
         try:
-            return self.meter_cache[self.util.meter_config[METER]]
+            m = self.meter_cache[self.util.meter_config[METER]]
+            m.cached = True
+            return m
         except:
             pass
 
