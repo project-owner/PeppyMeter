@@ -2,7 +2,6 @@
 
 * Now the meters to display can be defined as a comma separated names
 * It's possible to enable/disable Double Buffering in the configuration file
-* Introduced a meter cache which improves performance
 
 ## Hokusai Edition 2020.11.15
 
