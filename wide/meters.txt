@@ -13,6 +13,9 @@ left.origin.x = 333
 left.origin.y = 375
 right.origin.x = 957
 right.origin.y = 375
+meter.x = 0
+meter.y = 0
+screen.bgr =
 
 [black-white]
 meter.type = circular
@@ -28,6 +31,9 @@ left.origin.x = 342
 left.origin.y = 462
 right.origin.x = 949
 right.origin.y = 462
+meter.x = 0
+meter.y = 0
+screen.bgr =
 
 [white-red]
 meter.type = circular
@@ -43,6 +49,9 @@ left.origin.x = 345
 left.origin.y = 422
 right.origin.x = 940
 right.origin.y = 422
+meter.x = 0
+meter.y = 0
+screen.bgr =
 
 [emerald]
 meter.type = circular
@@ -59,6 +68,9 @@ left.origin.x = 333
 left.origin.y = 402
 right.origin.x = 933
 right.origin.y = 402
+meter.x = 0
+meter.y = 0
+screen.bgr =
 
 [orange]
 meter.type = circular
@@ -75,6 +87,9 @@ left.origin.x = 342
 left.origin.y = 347
 right.origin.x = 936
 right.origin.y = 347
+meter.x = 0
+meter.y = 0
+screen.bgr =
 
 [tube]
 meter.type = circular
@@ -91,6 +106,9 @@ left.origin.x = 281
 left.origin.y = 366
 right.origin.x = 983
 right.origin.y = 366
+meter.x = 0
+meter.y = 0
+screen.bgr =
 
 [red]
 meter.type = circular
@@ -107,6 +125,9 @@ left.origin.x = 343
 left.origin.y = 434
 right.origin.x = 933
 right.origin.y = 434
+meter.x = 0
+meter.y = 0
+screen.bgr =
 
 [blue]
 meter.type = circular
@@ -123,3 +144,6 @@ left.origin.x = 317
 left.origin.y = 460
 right.origin.x = 938
 right.origin.y = 460
+meter.x = 0
+meter.y = 0
+screen.bgr =

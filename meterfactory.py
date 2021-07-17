@@ -25,16 +25,24 @@ from configfileparser import *
 class MeterFactory(object):
     """ Meter creation factory """
     
-    def __init__(self, util, meter_config, data_source):
+    def __init__(self, util, meter_config, data_source, needle_cache, mono_rect_cache, left_rect_cache, right_rect_cache):
         """ Initializer
         
         :param util: utility class
         :param meter_config: configuration dictionary
         :param data_source: the source of audio data
+        :param needle_cache: dictionary where key - meter name, value - list of needle sprites
+        :param mono_rect_cache: dictionary where key - meter name, value - list of mono needle sprite rectangles
+        :param left_rect_cache: dictionary where key - meter name, value - list of left needle sprite rectangles
+        :param right_rect_cache: dictionary where key - meter name, value - list of right needle sprite rectangles
         """
         self.util = util
         self.meter_config = meter_config
         self.data_source = data_source
+        self.needle_cache = needle_cache
+        self.mono_rect_cache = mono_rect_cache
+        self.left_rect_cache = left_rect_cache
+        self.right_rect_cache = right_rect_cache
         
     def create_meter(self):
         """ Dispatcher method """ 
@@ -43,7 +51,7 @@ class MeterFactory(object):
         try:
             meter_config_section = self.meter_config[meter_name]
         except:
-            logging.debug(f"Meter '{meter_name}' not found for size '{self.meter_config[SCREEN_INFO][SCREEN_SIZE]}'")
+            logging.debug("Meter " + meter_name + " not found for size " + self.meter_config[SCREEN_INFO][SCREEN_SIZE])
             self.util.exit_function()
 
         if meter_config_section[METER_TYPE] == TYPE_LINEAR:
@@ -81,7 +89,7 @@ class MeterFactory(object):
         meter.total_steps = meter.positions_regular + meter.positions_overload + 1
         meter.step = 100/meter.total_steps
         
-        meter.add_background(config[BGR_FILENAME])
+        meter.add_background(config[BGR_FILENAME], config[METER_X], config[METER_Y])
         
         if config[CHANNELS] == 2:
             meter.add_channel(config[INDICATOR_FILENAME], meter.left_x, meter.left_y)
@@ -113,10 +121,10 @@ class MeterFactory(object):
         start_angle = config[START_ANGLE]
         stop_angle = config[STOP_ANGLE]
         meter.incr = (abs(start_angle) + abs(stop_angle)) / 100
-        meter.add_background(config[BGR_FILENAME])
+        meter.add_background(config[BGR_FILENAME], config[METER_X], config[METER_Y])
         needle = meter.load_image(config[INDICATOR_FILENAME])[1]
         
-        factory = NeedleFactory(needle, config)
+        factory = NeedleFactory(name, needle, config, self.needle_cache, self.mono_rect_cache, self.left_rect_cache, self.right_rect_cache)
         meter.needle_sprites = factory.needle_sprites
         
         if config[CHANNELS] == 2:

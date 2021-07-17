@@ -1,4 +1,4 @@
-# Copyright 2016-2020 PeppyMeter peppy.player@gmail.com
+# Copyright 2016-2021 PeppyMeter peppy.player@gmail.com
 # 
 # This file is part of PeppyMeter.
 # 
@@ -23,15 +23,16 @@ import logging
 from meterutil import MeterUtil
 from pygame.time import Clock
 from vumeter import Vumeter
-from datasource import DataSource, SOURCE_NOISE, SOURCE_PIPE
+from datasource import DataSource, SOURCE_NOISE, SOURCE_PIPE, SOURCE_HTTP
 from serialinterface import SerialInterface
 from i2cinterface import I2CInterface
 from pwminterface import PWMInterface
+from httpinterface import HTTPInterface
 from screensavermeter import ScreensaverMeter
-from configfileparser import ConfigFileParser, SCREEN_RECT, SCREEN_INFO, WIDTH, HEIGHT, DEPTH, FRAME_RATE, \
-    OUTPUT_DISPLAY, OUTPUT_SERIAL, OUTPUT_I2C, OUTPUT_PWM, DATA_SOURCE, TYPE, USE_LOGGING, USE_VU_METER, \
-    SDL_ENV, FRAMEBUFFER_DEVICE, MOUSE_DEVICE, MOUSE_DRIVER, VIDEO_DRIVER, VIDEO_DISPLAY, DOUBLE_BUFFER
-
+from configfileparser import ConfigFileParser, SCREEN_RECT, SCREEN_INFO, WIDTH, HEIGHT, DEPTH, FRAME_RATE, EXIT_ON_TOUCH, \
+    OUTPUT_DISPLAY, OUTPUT_SERIAL, OUTPUT_I2C, OUTPUT_PWM, OUTPUT_HTTP, DATA_SOURCE, TYPE, USE_LOGGING, USE_VU_METER, \
+    SDL_ENV, FRAMEBUFFER_DEVICE, MOUSE_DEVICE, MOUSE_DRIVER, MOUSE_ENABLED, VIDEO_DRIVER, VIDEO_DISPLAY, DOUBLE_BUFFER, \
+    NO_FRAME
 class Peppymeter(ScreensaverMeter):
     """ Peppy Meter class """
     
@@ -61,6 +62,7 @@ class Peppymeter(ScreensaverMeter):
         self.util.meter_config = parser.meter_config
         self.util.exit_function = self.exit
         self.outputs = {}
+        self.callback = None
         
         if standalone:
             if self.util.meter_config[USE_LOGGING]:
@@ -98,6 +100,9 @@ class Peppymeter(ScreensaverMeter):
         if self.util.meter_config[OUTPUT_PWM]:
             self.outputs[OUTPUT_PWM] = PWMInterface(self.util.meter_config, self.data_source)
 
+        if self.util.meter_config[OUTPUT_HTTP]:
+            self.outputs[OUTPUT_HTTP] = HTTPInterface(self.util.meter_config, self.data_source)
+
         self.start_interface_outputs()
         logging.debug("PeppyMeter initialized")
     
@@ -121,8 +126,12 @@ class Peppymeter(ScreensaverMeter):
         depth = self.util.meter_config[SCREEN_INFO][DEPTH]
         
         os.environ["SDL_FBDEV"] = self.util.meter_config[SDL_ENV][FRAMEBUFFER_DEVICE]
-        os.environ["SDL_MOUSEDEV"] = self.util.meter_config[SDL_ENV][MOUSE_DEVICE]
-        os.environ["SDL_MOUSEDRV"] = self.util.meter_config[SDL_ENV][MOUSE_DRIVER]
+
+        if self.util.meter_config[SDL_ENV][MOUSE_ENABLED]:
+            os.environ["SDL_MOUSEDEV"] = self.util.meter_config[SDL_ENV][MOUSE_DEVICE]
+            os.environ["SDL_MOUSEDRV"] = self.util.meter_config[SDL_ENV][MOUSE_DRIVER]
+        else:
+            os.environ["SDL_NOMOUSE"] = "1"
         
         if not self.util.meter_config[OUTPUT_DISPLAY]:
             os.environ["SDL_VIDEODRIVER"] = self.util.meter_config[SDL_ENV][VIDEO_DRIVER]
@@ -145,16 +154,24 @@ class Peppymeter(ScreensaverMeter):
             pygame.init()
             pygame.display.set_caption("Peppy Meter")
 
+        pygame.font.init()
+
         if self.util.meter_config[SDL_ENV][DOUBLE_BUFFER]:
-            self.util.PYGAME_SCREEN = pygame.display.set_mode((screen_w, screen_h), pygame.DOUBLEBUF, depth)
+            if self.util.meter_config[SDL_ENV][NO_FRAME]:
+                self.util.PYGAME_SCREEN = pygame.display.set_mode((screen_w, screen_h), pygame.DOUBLEBUF | pygame.NOFRAME, depth)
+            else:
+                self.util.PYGAME_SCREEN = pygame.display.set_mode((screen_w, screen_h), pygame.DOUBLEBUF, depth)
         else:
-            self.util.PYGAME_SCREEN = pygame.display.set_mode((screen_w, screen_h))
+            if self.util.meter_config[SDL_ENV][NO_FRAME]:
+                self.util.PYGAME_SCREEN = pygame.display.set_mode((screen_w, screen_h), pygame.NOFRAME)
+            else:
+                self.util.PYGAME_SCREEN = pygame.display.set_mode((screen_w, screen_h))
 
         self.util.meter_config[SCREEN_RECT] = pygame.Rect(0, 0, screen_w, screen_h) 
     
     def start_interface_outputs(self):
-        """ Starts writing to Serial and I@C interfaces """
-        
+        """ Starts writing interfaces """
+
         if self.util.meter_config[OUTPUT_SERIAL]:
             self.serial_interface = self.outputs[OUTPUT_SERIAL]
             self.serial_interface.start_writing()
@@ -166,37 +183,60 @@ class Peppymeter(ScreensaverMeter):
         if self.util.meter_config[OUTPUT_PWM]:
             self.pwm_interface = self.outputs[OUTPUT_PWM]
             self.pwm_interface.start_writing()
+
+        if self.util.meter_config[OUTPUT_HTTP]:
+            self.http_interface = self.outputs[OUTPUT_HTTP]
+            self.http_interface.start_writing()
     
     def start(self):
         """ Start VU meter. This method called by Peppy Meter to start meter """
-        
+
         pygame.event.clear()
         if self.util.meter_config[DATA_SOURCE][TYPE] == SOURCE_PIPE or self.use_vu_meter == True:
             self.data_source.start_data_source()
         self.meter.start()
+        if self.callback:
+            self.callback.start()
+
+        if self.util.meter_config[OUTPUT_HTTP]:
+            self.http_interface = self.outputs[OUTPUT_HTTP]
+            self.http_interface.start_writing()
         
     def start_display_output(self):
         """ Start thread for graphical VU meter """
         
         pygame.event.clear()
         clock = Clock()
-        self.meter.start()        
-        while 1:
+        self.meter.start()
+        running = True
+
+        while running:
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
-                    self.exit()
+                    running = False
                 elif event.type == pygame.KEYDOWN or event.type == pygame.KEYUP:
                     keys = pygame.key.get_pressed() 
                     if (keys[pygame.K_LCTRL] or keys[pygame.K_RCTRL]) and event.key == pygame.K_c:
-                        self.exit()                                                 
+                        running = False
+                elif event.type == pygame.MOUSEBUTTONUP and self.util.meter_config[EXIT_ON_TOUCH]:
+                    running = False
+
             self.refresh()
             clock.tick(self.util.meter_config[FRAME_RATE])
+
+        self.exit()
     
     def stop(self):
         """ Stop meter animation. """ 
         if not (self.util.meter_config[DATA_SOURCE][TYPE] == SOURCE_PIPE and self.use_vu_meter == True):
             self.data_source.stop_data_source()
         self.meter.stop()
+        if self.callback:
+            self.callback.stop()
+
+        if self.util.meter_config[OUTPUT_HTTP]:
+            self.http_interface = self.outputs[OUTPUT_HTTP]
+            self.http_interface.stop_writing()
     
     def refresh(self):
         """ Refresh meter. Used to switch from one random meter to another. """
@@ -219,6 +259,8 @@ class Peppymeter(ScreensaverMeter):
             self.i2c_interface.stop_writing()
         if self.util.meter_config[OUTPUT_PWM]:
             self.pwm_interface.stop_writing()
+        if self.util.meter_config[OUTPUT_HTTP]:
+            self.http_interface.stop_writing()
         pygame.quit()            
         os._exit(0)
 
@@ -232,7 +274,18 @@ class Peppymeter(ScreensaverMeter):
 if __name__ == "__main__":
     """ This is called by stand-alone PeppyMeter """
     pm = Peppymeter(standalone=True)
-    if pm.util.meter_config[DATA_SOURCE][TYPE] != SOURCE_PIPE:
+    source = pm.util.meter_config[DATA_SOURCE][TYPE]
+
+    if source == SOURCE_HTTP:
+        try:
+            f = open(os.devnull, 'w')
+            sys.stdout = sys.stderr = f
+            from webserver import WebServer
+            web_server = WebServer(pm)
+        except Exception as e:
+            logging.debug(e)
+
+    if source != SOURCE_PIPE:
         pm.data_source.start_data_source()
         
     pm.init_display()

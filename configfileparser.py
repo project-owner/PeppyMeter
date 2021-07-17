@@ -16,7 +16,6 @@
 # along with PeppyMeter. If not, see <http://www.gnu.org/licenses/>.
 
 import os
-import logging
 
 from configparser import ConfigParser
 
@@ -26,12 +25,16 @@ WIDTH = "width"
 HEIGHT = "height"
 DEPTH = "depth"
 FRAME_RATE = "frame.rate"
-SCREEN_SIZE = "screen.size"
+METER_SIZE = "meter.size"
+SCREEN_WIDTH = "screen.width"
+SCREEN_HEIGHT = "screen.height"
 SCREEN_RECT = "screen.rect"
+EXIT_ON_TOUCH = "exit.on.touch"
 OUTPUT_DISPLAY = "output.display"
 OUTPUT_SERIAL = "output.serial"
 OUTPUT_I2C = "output.i2c"
 OUTPUT_PWM = "output.pwm"
+OUTPUT_HTTP = "output.http"
 
 SERIAL_INTERFACE = "serial.interface"
 DEVICE_NAME = "device.name"
@@ -45,6 +48,9 @@ LEFT_CHANNEL_ADDRESS = "left.channel.address"
 RIGHT_CHANNEL_ADDRESS = "right.channel.address"
 OUTPUT_SIZE = "output.size"
 
+HTTP_INTERFACE = "http.interface"
+TARGET_URL = "target.url"
+
 PWM_INTERFACE = "pwm.interface"
 FREQUENCY = "frequency"
 GPIO_PIN_LEFT = "gpio.pin.left"
@@ -54,9 +60,11 @@ SDL_ENV = "sdl.env"
 FRAMEBUFFER_DEVICE = "framebuffer.device"
 MOUSE_DEVICE = "mouse.device"
 MOUSE_DRIVER = "mouse.driver"
+MOUSE_ENABLED = "mouse.enabled"
 VIDEO_DRIVER = "video.driver"
 VIDEO_DISPLAY = "video.display"
 DOUBLE_BUFFER = "double.buffer"
+NO_FRAME = "no.frame"
 
 SMOOTH_BUFFER_SIZE = "smooth.buffer.size"
 USE_LOGGING = "use.logging"
@@ -107,6 +115,9 @@ RIGHT_ORIGIN_Y = "right.origin.y"
 METER_NAMES = "meter.names"
 RANDOM_METER_INTERVAL = "random.meter.interval"
 BASE_PATH = "base.path"
+METER_X = "meter.x"
+METER_Y = "meter.y"
+SCREEN_BGR = "screen.bgr"
 
 FILE_CONFIG = "config.txt"
 FILE_METER_CONFIG = "meters.txt"
@@ -129,6 +140,9 @@ DEFAULT_FRAME_RATE = 30
 TYPE_LINEAR = "linear"
 TYPE_CIRCULAR = "circular"
 
+WEB_SERVER = "web.server"
+HTTP_PORT = "http.port"
+
 class ConfigFileParser(object):
     """ Configuration file parser """
     
@@ -144,10 +158,12 @@ class ConfigFileParser(object):
         
         self.meter_config[METER] = c.get(CURRENT, METER)
         self.meter_config[RANDOM_METER_INTERVAL] = c.getint(CURRENT, RANDOM_METER_INTERVAL)
+        self.meter_config[EXIT_ON_TOUCH] = c.getboolean(CURRENT, EXIT_ON_TOUCH)
         self.meter_config[OUTPUT_DISPLAY] = c.getboolean(CURRENT, OUTPUT_DISPLAY)
         self.meter_config[OUTPUT_SERIAL] = c.getboolean(CURRENT, OUTPUT_SERIAL)
         self.meter_config[OUTPUT_I2C] = c.getboolean(CURRENT, OUTPUT_I2C)
         self.meter_config[OUTPUT_PWM] = c.getboolean(CURRENT, OUTPUT_PWM)
+        self.meter_config[OUTPUT_HTTP] = c.getboolean(CURRENT, OUTPUT_HTTP)
         self.meter_config[USE_LOGGING] = c.getboolean(CURRENT, USE_LOGGING)
         self.meter_config[FRAME_RATE] = c.getint(CURRENT, FRAME_RATE)
         
@@ -170,35 +186,48 @@ class ConfigFileParser(object):
         self.meter_config[PWM_INTERFACE][GPIO_PIN_RIGHT] = c.getint(PWM_INTERFACE, GPIO_PIN_RIGHT)
         self.meter_config[PWM_INTERFACE][UPDATE_PERIOD] = c.getfloat(PWM_INTERFACE, UPDATE_PERIOD)
 
+        self.meter_config[HTTP_INTERFACE] = {TARGET_URL: c.get(HTTP_INTERFACE, TARGET_URL)}
+        self.meter_config[HTTP_INTERFACE][UPDATE_PERIOD] = c.getfloat(HTTP_INTERFACE, UPDATE_PERIOD)
+
+        self.meter_config[HTTP_PORT] = c.get(WEB_SERVER, HTTP_PORT)
+
         self.meter_config[SDL_ENV] = self.get_sdl_environment_section(c, SDL_ENV)
 
-        screen_size = c.get(CURRENT, SCREEN_SIZE)
+        meter_size = c.get(CURRENT, METER_SIZE)
         self.meter_config[SCREEN_INFO] = {}
-        self.meter_config[SCREEN_INFO][SCREEN_SIZE] = screen_size
+        self.meter_config[SCREEN_INFO][METER_SIZE] = meter_size
         self.meter_config[SCREEN_INFO][DEPTH] = DEFAULT_DEPTH
         self.meter_config[SCREEN_INFO][FRAME_RATE] = DEFAULT_FRAME_RATE        
         
-        if screen_size == MEDIUM:
+        if meter_size == MEDIUM:
             self.meter_config[SCREEN_INFO][WIDTH] = MEDIUM_WIDTH
             self.meter_config[SCREEN_INFO][HEIGHT] = MEDIUM_HEIGHT
-        elif screen_size == SMALL:
+        elif meter_size == SMALL:
             self.meter_config[SCREEN_INFO][WIDTH] = SMALL_WIDTH
             self.meter_config[SCREEN_INFO][HEIGHT] = SMALL_HEIGHT
-        elif screen_size == LARGE:
+        elif meter_size == LARGE:
             self.meter_config[SCREEN_INFO][WIDTH] = LARGE_WIDTH
             self.meter_config[SCREEN_INFO][HEIGHT] = LARGE_HEIGHT
-        elif screen_size == WIDE:
+        elif meter_size == WIDE:
             self.meter_config[SCREEN_INFO][WIDTH] = WIDE_WIDTH
             self.meter_config[SCREEN_INFO][HEIGHT] = WIDE_HEIGHT
         else:
-            print(f"Not supported screen size: '{screen_size}'")
-            os._exit(0)
+            folder = os.path.join(base_path, meter_size)
+            if not os.path.isdir(folder):
+                print("Not supported screen size: " + meter_size)
+                os._exit(0)
+
+        try:
+            self.meter_config[SCREEN_INFO][WIDTH] = c.getint(CURRENT, SCREEN_WIDTH)
+            self.meter_config[SCREEN_INFO][HEIGHT] = c.getint(CURRENT, SCREEN_HEIGHT)
+        except:
+            pass
 
         self.meter_config[DATA_SOURCE] = self.get_data_source_section(c, DATA_SOURCE)
         
-        meter_config_path = os.path.join(base_path, screen_size, FILE_METER_CONFIG)
+        meter_config_path = os.path.join(base_path, meter_size, FILE_METER_CONFIG)
         if not os.path.exists(meter_config_path):
-            print(f"Cannot read file: {meter_config_path}")
+            print("Cannot read file: " + meter_config_path)
             os._exit(0)
 
         c = ConfigParser()
@@ -254,6 +283,9 @@ class ConfigFileParser(object):
         d[RIGHT_Y] = config_file.getint(section, RIGHT_Y)
         d[POSITION_REGULAR] = config_file.getint(section, POSITION_REGULAR)
         d[STEP_WIDTH_REGULAR] = config_file.getint(section, STEP_WIDTH_REGULAR)
+        d[METER_X] = config_file.getint(section, METER_X)
+        d[METER_Y] = config_file.getint(section, METER_Y)
+        d[SCREEN_BGR] = config_file.get(section, SCREEN_BGR)
         try:
             d[POSITION_OVERLOAD] = config_file.getint(section, POSITION_OVERLOAD)
             d[STEP_WIDTH_OVERLOAD] = config_file.getint(section, STEP_WIDTH_OVERLOAD)
@@ -273,7 +305,10 @@ class ConfigFileParser(object):
         d[STEPS_PER_DEGREE] = config_file.getint(section, STEPS_PER_DEGREE)
         d[START_ANGLE] = config_file.getint(section, START_ANGLE)
         d[STOP_ANGLE] = config_file.getint(section, STOP_ANGLE)
-        d[DISTANCE] = config_file.getint(section, DISTANCE)        
+        d[DISTANCE] = config_file.getint(section, DISTANCE)
+        d[METER_X] = config_file.getint(section, METER_X)
+        d[METER_Y] = config_file.getint(section, METER_Y)
+        d[SCREEN_BGR] = config_file.get(section, SCREEN_BGR)
         if d[CHANNELS] == 1:                  
             d[MONO_ORIGIN_X] = config_file.getint(section, MONO_ORIGIN_X)
             d[MONO_ORIGIN_Y] = config_file.getint(section, MONO_ORIGIN_Y)            
@@ -312,7 +347,9 @@ class ConfigFileParser(object):
         d[FRAMEBUFFER_DEVICE] = config_file.get(section, FRAMEBUFFER_DEVICE)
         d[MOUSE_DEVICE] = config_file.get(section, MOUSE_DEVICE)
         d[MOUSE_DRIVER] = config_file.get(section, MOUSE_DRIVER)
+        d[MOUSE_ENABLED] = config_file.getboolean(section, MOUSE_ENABLED)
         d[VIDEO_DRIVER] = config_file.get(section, VIDEO_DRIVER)
         d[VIDEO_DISPLAY] = config_file.get(section, VIDEO_DISPLAY)
         d[DOUBLE_BUFFER] = config_file.getboolean(section, DOUBLE_BUFFER)
+        d[NO_FRAME] = config_file.getboolean(section, NO_FRAME)
         return d

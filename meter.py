@@ -19,7 +19,7 @@ import os
 
 from component import Component
 from container import Container
-from configfileparser import TYPE_LINEAR, TYPE_CIRCULAR, SCREEN_INFO, SCREEN_RECT, SCREEN_SIZE, BASE_PATH
+from configfileparser import SCREEN_BGR, TYPE_LINEAR, TYPE_CIRCULAR, SCREEN_INFO, SCREEN_RECT, METER_SIZE, BASE_PATH, METER
 from linear import LinearAnimator
 from circular import CircularAnimator
 
@@ -64,14 +64,16 @@ class Meter(Container):
         self.channels = 1
         self.cached = False
 
-    def add_background(self, image_name):
+    def add_background(self, image_name, meter_x, meter_y):
         """ Position and add background image.
         
         :param image_name: the name of the background image
+        :param meter_x: meter x coordinate
+        :param meter_y: meter y coordinate
         """
         img = self.load_image(image_name)
-        self.origin_x = 0
-        self.origin_y = 0
+        self.origin_x = meter_x
+        self.origin_y = meter_y
         self.meter_bounding_box = img[1].get_rect()
         self.meter_bounding_box.x = self.origin_x
         self.meter_bounding_box.y = self.origin_y
@@ -104,7 +106,7 @@ class Meter(Container):
         :param image_name: the image name
         """
         base_path = self.meter_config[BASE_PATH]
-        folder = self.meter_config[SCREEN_INFO][SCREEN_SIZE]
+        folder = self.meter_config[SCREEN_INFO][METER_SIZE]
         path = os.path.join(base_path, folder,  image_name)        
         return self.util.load_pygame_image(path)
     
@@ -136,11 +138,22 @@ class Meter(Container):
         comp.content_x = rect.x
         comp.content_y = rect.y
         comp.bounding_box = rect
+        comp.bounding_box = (rect.x - self.origin_x, rect.y - self.origin_y, rect.w, rect.h)
         comp.draw()
             
     def start(self):
         """ Initialize meter and start meter animation. """
         
+        meter_name = self.meter_config[METER]
+        meter_section = self.meter_config[meter_name]
+        if meter_section[SCREEN_BGR]:
+           img = self.load_image(meter_section[SCREEN_BGR])
+           c = Component(self.util)
+           c.content = img[1]
+           c.content_x = 0
+           c.content_y = 0
+           c.draw()
+
         self.reset_bgr_fgr(self.bgr)
         
         if not self.cached:

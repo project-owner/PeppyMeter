@@ -1,11 +1,15 @@
 [current]
 meter = random
 random.meter.interval = 20
-screen.size = medium
+meter.size = medium
+screen.width =
+screen.height =
+exit.on.touch = False
 output.display = True
 output.serial = False
 output.i2c = False
 output.pwm = False
+output.http = False
 use.logging = False
 frame.rate = 30
 
@@ -13,9 +17,11 @@ frame.rate = 30
 framebuffer.device = /dev/fb1
 mouse.device = /dev/input/touchscreen
 mouse.driver = TSLIB
+mouse.enabled = True
 video.driver = dummy
 video.display = :0
 double.buffer = True
+no.frame = False
 
 [serial.interface]
 device.name = /dev/serial0
@@ -34,7 +40,14 @@ update.period = 0.1
 frequency = 500
 gpio.pin.left = 24
 gpio.pin.right = 25
-update.period = 0.1 
+update.period = 0.1
+
+[http.interface]
+target.url = http://localhost:8000/vumeter
+update.period = 0.033
+
+[web.server]
+http.port = 8001
 
 [data.source]
 type = pipe

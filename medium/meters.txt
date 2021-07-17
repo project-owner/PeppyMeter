@@ -11,7 +11,10 @@ right.y = 178
 position.regular = 11
 position.overload = 3
 step.width.regular = 19
-step.width.overload = 25  
+step.width.overload = 25
+meter.x = 0
+meter.y = 0
+screen.bgr =
 
 [blue]
 meter.type = circular
@@ -26,6 +29,9 @@ stop.angle = -45
 distance = 183
 mono.origin.x = 238
 mono.origin.y = 380
+meter.x = 0
+meter.y = 0
+screen.bgr =
 
 [vintage]
 meter.type = circular
@@ -42,6 +48,9 @@ left.origin.x = 129
 left.origin.y = 217
 right.origin.x = 349
 right.origin.y = 217
+meter.x = 0
+meter.y = 0
+screen.bgr =
 
 [dash]
 meter.type = linear
@@ -57,6 +66,9 @@ position.regular = 9
 position.overload = 4
 step.width.regular = 34
 step.width.overload = 34
+meter.x = 0
+meter.y = 0
+screen.bgr =
 
 [gas]
 meter.type = linear
@@ -70,6 +82,9 @@ right.x = 46
 right.y = 169       
 position.regular = 69
 step.width.regular = 6
+meter.x = 0
+meter.y = 0
+screen.bgr =
 
 [rainbow]
 meter.type = circular
@@ -84,6 +99,9 @@ stop.angle = -39
 distance = 165
 mono.origin.x = 242
 mono.origin.y = 364
+meter.x = 0
+meter.y = 0
+screen.bgr =
 
 [grunge]
 meter.type = circular
@@ -100,6 +118,9 @@ left.origin.x = 125
 left.origin.y = 195
 right.origin.x = 357
 right.origin.y = 195
+meter.x = 0
+meter.y = 0
+screen.bgr =
 
 [royal]
 meter.type = circular
@@ -114,6 +135,9 @@ stop.angle = -51
 distance = 82
 mono.origin.x = 240
 mono.origin.y = 243
+meter.x = 0
+meter.y = 0
+screen.bgr =
 
 [compass]
 meter.type = circular
@@ -130,6 +154,9 @@ left.origin.x = 128
 left.origin.y = 162
 right.origin.x = 351
 right.origin.y = 162
+meter.x = 0
+meter.y = 0
+screen.bgr =
 
 [gold]
 meter.type = circular
@@ -144,6 +171,9 @@ stop.angle = -44
 distance = 136
 mono.origin.x = 244
 mono.origin.y = 301
+meter.x = 0
+meter.y = 0
+screen.bgr =
 
 [black-white]
 meter.type = circular
@@ -157,6 +187,9 @@ stop.angle = -45
 distance = 170
 mono.origin.x = 242
 mono.origin.y = 360
+meter.x = 0
+meter.y = 0
+screen.bgr =
 
 [white-red]
 meter.type = circular
@@ -170,6 +203,9 @@ stop.angle = -36
 distance = 110
 mono.origin.x = 243
 mono.origin.y = 333
+meter.x = 0
+meter.y = 0
+screen.bgr =
 
 [orange]
 meter.type = circular
@@ -184,6 +220,9 @@ stop.angle = -48
 distance = 28
 mono.origin.x = 241
 mono.origin.y = 239
+meter.x = 0
+meter.y = 0
+screen.bgr =
 
 [blue-2]
 meter.type = circular
@@ -200,6 +239,9 @@ left.origin.x = 118
 left.origin.y = 247
 right.origin.x = 351
 right.origin.y = 247
+meter.x = 0
+meter.y = 0
+screen.bgr =
 
 [emerald]
 meter.type = circular
@@ -216,6 +258,9 @@ left.origin.x = 125
 left.origin.y = 229
 right.origin.x = 350
 right.origin.y = 229
+meter.x = 0
+meter.y = 0
+screen.bgr =
 
 [red]
 meter.type = circular
@@ -232,6 +277,9 @@ left.origin.x = 129
 left.origin.y = 237
 right.origin.x = 350
 right.origin.y = 237
+meter.x = 0
+meter.y = 0
+screen.bgr =
 
 [tube]
 meter.type = circular
@@ -248,3 +296,6 @@ left.origin.x = 106
 left.origin.y = 207
 right.origin.x = 370
 right.origin.y = 207
+meter.x = 0
+meter.y = 0
+screen.bgr =
