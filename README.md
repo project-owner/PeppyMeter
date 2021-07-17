@@ -1,3 +1,11 @@
+## Renoir Edition 2021.07.17
+
+* PeppyMeter can send HTTP requests with volume data to remote web servers
+* PeppyMeter can receive HTTP requests and display volume data from those requests
+* Added cache for needle sprites. It makes transition from one meter to another much faster. It also fixed the Pygame/SDL memory leak
+* Implemented ability to embed PeppyMeter to larger screens
+* New configuration parameter enables exit on touch event
+
 ## Hiroshige Edition 2021.04.18
 
 * Now the meters to display can be defined as a comma separated names
