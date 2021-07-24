@@ -92,12 +92,18 @@ class Vumeter(ScreensaverMeter):
         self.meter = self.get_meter()
         self.meter.set_volume(self.current_volume)
         self.meter.start()
+
+        if hasattr(self, "callback_start"):
+            self.callback_start(self.meter)
     
     def stop(self):
         """ Stop meter animation. """ 
         
         self.seconds = 0       
         self.meter.stop()
+
+        if hasattr(self, "callback_stop"):
+            self.callback_stop(self.meter)
     
     def refresh(self):
         """ Refresh meter. Used to update random meter. """ 

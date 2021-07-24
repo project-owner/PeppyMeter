@@ -62,7 +62,6 @@ class Peppymeter(ScreensaverMeter):
         self.util.meter_config = parser.meter_config
         self.util.exit_function = self.exit
         self.outputs = {}
-        self.callback = None
         
         if standalone:
             if self.util.meter_config[USE_LOGGING]:
@@ -195,8 +194,6 @@ class Peppymeter(ScreensaverMeter):
         if self.util.meter_config[DATA_SOURCE][TYPE] == SOURCE_PIPE or self.use_vu_meter == True:
             self.data_source.start_data_source()
         self.meter.start()
-        if self.callback:
-            self.callback.start()
 
         if self.util.meter_config[OUTPUT_HTTP]:
             self.http_interface = self.outputs[OUTPUT_HTTP]
@@ -231,8 +228,6 @@ class Peppymeter(ScreensaverMeter):
         if not (self.util.meter_config[DATA_SOURCE][TYPE] == SOURCE_PIPE and self.use_vu_meter == True):
             self.data_source.stop_data_source()
         self.meter.stop()
-        if self.callback:
-            self.callback.stop()
 
         if self.util.meter_config[OUTPUT_HTTP]:
             self.http_interface = self.outputs[OUTPUT_HTTP]
