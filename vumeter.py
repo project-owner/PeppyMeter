@@ -15,12 +15,14 @@
 # You should have received a copy of the GNU General Public License
 # along with PeppyMeter. If not, see <http://www.gnu.org/licenses/>.
 
-from random import randrange
 import time
 import copy
+import sys
+
+from random import randrange
 from meterfactory import MeterFactory
 from screensavermeter import ScreensaverMeter
-from configfileparser import METER, METER_NAMES, RANDOM_METER_INTERVAL
+from configfileparser import METER, METER_NAMES, RANDOM_METER_INTERVAL, USE_CACHE
 
 class Vumeter(ScreensaverMeter):
     """ VU Meter plug-in. """
@@ -104,6 +106,22 @@ class Vumeter(ScreensaverMeter):
 
         if hasattr(self, "callback_stop"):
             self.callback_stop(self.meter)
+
+        if not self.util.meter_config[USE_CACHE]:
+            del self.needle_cache
+            del self.mono_rect_cache
+            del self.left_rect_cache
+            del self.right_rect_cache
+            del self.meter
+
+            if hasattr(self, "malloc_trim"):
+                self.malloc_trim()
+
+            self.needle_cache = {}
+            self.mono_rect_cache = {}
+            self.left_rect_cache = {}
+            self.right_rect_cache = {}
+            self.meter = None
     
     def refresh(self):
         """ Refresh meter. Used to update random meter. """ 

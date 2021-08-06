@@ -68,6 +68,7 @@ NO_FRAME = "no.frame"
 
 SMOOTH_BUFFER_SIZE = "smooth.buffer.size"
 USE_LOGGING = "use.logging"
+USE_CACHE = "use.cache"
 USAGE = "usage"
 USE_VU_METER = "vu.meter"
 METER = "meter"
@@ -165,6 +166,7 @@ class ConfigFileParser(object):
         self.meter_config[OUTPUT_PWM] = c.getboolean(CURRENT, OUTPUT_PWM)
         self.meter_config[OUTPUT_HTTP] = c.getboolean(CURRENT, OUTPUT_HTTP)
         self.meter_config[USE_LOGGING] = c.getboolean(CURRENT, USE_LOGGING)
+        self.meter_config[USE_CACHE] = c.getboolean(CURRENT, USE_CACHE)
         self.meter_config[FRAME_RATE] = c.getint(CURRENT, FRAME_RATE)
         
         self.meter_config[SERIAL_INTERFACE] = {}

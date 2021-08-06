@@ -51,7 +51,7 @@ class MeterFactory(object):
         try:
             meter_config_section = self.meter_config[meter_name]
         except:
-            logging.debug("Meter " + meter_name + " not found for size " + self.meter_config[SCREEN_INFO][SCREEN_SIZE])
+            logging.debug("Meter " + meter_name + " not found for size " + self.meter_config[SCREEN_INFO][METER_SIZE])
             self.util.exit_function()
 
         if meter_config_section[METER_TYPE] == TYPE_LINEAR:

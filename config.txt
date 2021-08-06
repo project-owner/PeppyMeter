@@ -11,6 +11,7 @@ output.i2c = False
 output.pwm = False
 output.http = False
 use.logging = False
+use.cache = True
 frame.rate = 30
 
 [sdl.env]

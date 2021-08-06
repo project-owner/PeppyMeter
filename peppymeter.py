@@ -256,7 +256,11 @@ class Peppymeter(ScreensaverMeter):
             self.pwm_interface.stop_writing()
         if self.util.meter_config[OUTPUT_HTTP]:
             self.http_interface.stop_writing()
-        pygame.quit()            
+        pygame.quit()
+
+        if hasattr(self, "malloc_trim"):
+            self.malloc_trim()
+
         os._exit(0)
 
     def set_visible(self, flag):
