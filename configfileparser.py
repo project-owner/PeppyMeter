@@ -1,4 +1,4 @@
-# Copyright 2016-2021 PeppyMeter peppy.player@gmail.com
+# Copyright 2016-2022 PeppyMeter peppy.player@gmail.com
 # 
 # This file is part of PeppyMeter.
 # 
@@ -30,6 +30,7 @@ SCREEN_WIDTH = "screen.width"
 SCREEN_HEIGHT = "screen.height"
 SCREEN_RECT = "screen.rect"
 EXIT_ON_TOUCH = "exit.on.touch"
+STOP_DISPLAY_ON_TOUCH = "stop.display.on.touch"
 OUTPUT_DISPLAY = "output.display"
 OUTPUT_SERIAL = "output.serial"
 OUTPUT_I2C = "output.i2c"
@@ -144,6 +145,15 @@ TYPE_CIRCULAR = "circular"
 WEB_SERVER = "web.server"
 HTTP_PORT = "http.port"
 
+NEEDLE_WIDTH = "needle.width"
+NEEDLE_HEIGHT = "needle.height"
+LEFT_START_ANGLE = "left.start.angle"
+LEFT_STOP_ANGLE = "left.stop.angle"
+RIGHT_START_ANGLE = "right.start.angle"
+RIGHT_STOP_ANGLE = "right.stop.angle"
+LEFT_NEEDLE_FLIP = "left.needle.flip"
+RIGHT_NEEDLE_FLIP = "right.needle.flip"
+
 class ConfigFileParser(object):
     """ Configuration file parser """
     
@@ -160,6 +170,7 @@ class ConfigFileParser(object):
         self.meter_config[METER] = c.get(CURRENT, METER)
         self.meter_config[RANDOM_METER_INTERVAL] = c.getint(CURRENT, RANDOM_METER_INTERVAL)
         self.meter_config[EXIT_ON_TOUCH] = c.getboolean(CURRENT, EXIT_ON_TOUCH)
+        self.meter_config[STOP_DISPLAY_ON_TOUCH] = c.getboolean(CURRENT, STOP_DISPLAY_ON_TOUCH)
         self.meter_config[OUTPUT_DISPLAY] = c.getboolean(CURRENT, OUTPUT_DISPLAY)
         self.meter_config[OUTPUT_SERIAL] = c.getboolean(CURRENT, OUTPUT_SERIAL)
         self.meter_config[OUTPUT_I2C] = c.getboolean(CURRENT, OUTPUT_I2C)
@@ -305,8 +316,31 @@ class ConfigFileParser(object):
         d = {}
         self.get_common_options(d, config_file, section, meter_type)
         d[STEPS_PER_DEGREE] = config_file.getint(section, STEPS_PER_DEGREE)
-        d[START_ANGLE] = config_file.getint(section, START_ANGLE)
-        d[STOP_ANGLE] = config_file.getint(section, STOP_ANGLE)
+
+        try:
+            d[START_ANGLE] = config_file.getint(section, START_ANGLE)
+            d[STOP_ANGLE] = config_file.getint(section, STOP_ANGLE)
+        except:
+            pass
+
+        try:
+            d[LEFT_START_ANGLE] = config_file.getint(section, LEFT_START_ANGLE)
+            d[LEFT_STOP_ANGLE] = config_file.getint(section, LEFT_STOP_ANGLE)
+            d[RIGHT_START_ANGLE] = config_file.getint(section, RIGHT_START_ANGLE)
+            d[RIGHT_STOP_ANGLE] = config_file.getint(section, RIGHT_STOP_ANGLE)
+        except:
+            d[LEFT_START_ANGLE] = d[START_ANGLE]
+            d[LEFT_STOP_ANGLE] = d[STOP_ANGLE]
+            d[RIGHT_START_ANGLE] = d[START_ANGLE]
+            d[RIGHT_STOP_ANGLE] = d[STOP_ANGLE]
+
+        try:
+            d[LEFT_NEEDLE_FLIP] = config_file.getboolean(section, LEFT_NEEDLE_FLIP)
+            d[RIGHT_NEEDLE_FLIP] = config_file.getboolean(section, RIGHT_NEEDLE_FLIP)
+        except:
+            d[LEFT_NEEDLE_FLIP] = False
+            d[RIGHT_NEEDLE_FLIP] = False
+
         d[DISTANCE] = config_file.getint(section, DISTANCE)
         d[METER_X] = config_file.getint(section, METER_X)
         d[METER_Y] = config_file.getint(section, METER_Y)

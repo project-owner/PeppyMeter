@@ -1,4 +1,4 @@
-# Copyright 2016-2021 PeppyMeter peppy.player@gmail.com
+# Copyright 2016-2022 PeppyMeter peppy.player@gmail.com
 # 
 # This file is part of PeppyMeter.
 # 
@@ -19,23 +19,24 @@ import os
 
 from component import Component
 from container import Container
-from configfileparser import SCREEN_BGR, TYPE_LINEAR, TYPE_CIRCULAR, SCREEN_INFO, SCREEN_RECT, METER_SIZE, BASE_PATH, METER
+from configfileparser import *
 from linear import LinearAnimator
 from circular import CircularAnimator
 
 class Meter(Container):
     """ The base class for all meters """
     
-    def __init__(self, util, meter_type, ui_refresh_period, data_source):
+    def __init__(self, util, meter_type, meter_parameters, data_source):
         """ Initializer
         
         :param util: utility class
         :param meter_type: the type of the meter - linear or circular
-        :param ui_refresh_period: refresh interval for animation
+        :param meter_parameters: meter configuration parameters
         :param data_source: audio data source
         """
         self.util = util
         self.meter_config = util.meter_config
+        self.meter_parameters = meter_parameters
         
         if getattr(util, "config", None):
             self.config = util.config
@@ -44,7 +45,7 @@ class Meter(Container):
             self.rect = self.util.meter_config[SCREEN_RECT]
                 
         self.meter_type = meter_type
-        self.ui_refresh_period = ui_refresh_period
+        self.ui_refresh_period = meter_parameters[UI_REFRESH_PERIOD]
         self.data_source = data_source       
         Container.__init__(self, util, self.rect, (0, 0, 0))
         self.content = None
@@ -56,13 +57,16 @@ class Meter(Container):
         self.fgr = None
         self.left_sprites = None
         self.right_sprites = None
-        self.needle_sprites = None
+        self.mono_needle_sprites = None
         self.mono_needle_rects = None
+        self.left_needle_sprites = None
+        self.right_needle_sprites = None
         self.left_needle_rects = None
         self.right_needle_rects = None
         self.masks = None
         self.channels = 1
-        self.cached = False
+        self.meter_x = meter_parameters[METER_X]
+        self.meter_y = meter_parameters[METER_Y]
 
     def add_background(self, image_name, meter_x, meter_y):
         """ Position and add background image.
@@ -122,7 +126,11 @@ class Meter(Container):
         c.content = image
         c.content_x = rect.x
         c.content_y = rect.y
-        if rect: c.bounding_box = rect
+        if rect:
+            r = rect.copy()
+            r.x += self.meter_x
+            r.y += self.meter_y
+            c.bounding_box = r
         self.add_component(c)
         return c
 
@@ -156,37 +164,32 @@ class Meter(Container):
 
         self.reset_bgr_fgr(self.bgr)
         
-        if not self.cached:
-            if self.needle_sprites:
-                if self.channels == 1:
-                    self.components[1].content = None
-                    self.components[1].bounding_box = self.mono_needle_rects[0]
-                elif self.channels == 2:
-                    self.components[1].content = self.needle_sprites[0]
-                    self.components[1].bounding_box = self.left_needle_rects[0]
-                    self.components[2].content = self.needle_sprites[0]
-                    self.components[2].bounding_box = self.right_needle_rects[0]
-
-            if self.masks:
-                self.reset_mask(self.components[1])
-                self.reset_mask(self.components[2])
+        if self.masks:
+            self.reset_mask(self.components[1])
+            self.reset_mask(self.components[2])
         
         if self.fgr: self.reset_bgr_fgr(self.fgr)
         
         super(Meter, self).draw()
         self.update()
+        needles = (self.left_needle_sprites, self.right_needle_sprites, self.mono_needle_sprites)
         rects = (self.left_needle_rects, self.right_needle_rects, self.mono_needle_rects)
+
         if self.meter_type == TYPE_LINEAR:
-            self.animator = LinearAnimator(self.data_source, self.components, self, self.ui_refresh_period)
+            y = self.meter_parameters[LEFT_Y] + self.meter_parameters[METER_Y]
+            self.animator = LinearAnimator(self.data_source, self.components, self, self.ui_refresh_period, y)
             self.animator.start()
         elif self.meter_type == TYPE_CIRCULAR:
             if self.channels == 2:
-                self.left = CircularAnimator(self.data_source, self.components[1], self, self.ui_refresh_period, rects[0], self.data_source.get_current_left_channel_data)
-                self.right = CircularAnimator(self.data_source, self.components[2], self, self.ui_refresh_period, rects[1], self.data_source.get_current_right_channel_data)
+                self.left = CircularAnimator(self.data_source, self.components[1], self, self.meter_parameters, needles[0], rects[0],
+                    self.data_source.get_current_left_channel_data, self.meter_parameters[LEFT_ORIGIN_X], self.meter_parameters[LEFT_ORIGIN_Y])
+                self.right = CircularAnimator(self.data_source, self.components[2], self, self.meter_parameters, needles[1], rects[1],
+                    self.data_source.get_current_right_channel_data, self.meter_parameters[RIGHT_ORIGIN_X], self.meter_parameters[RIGHT_ORIGIN_Y])
                 self.left.start()
                 self.right.start()
             else:
-                self.mono = CircularAnimator(self.data_source, self.components[1], self, self.ui_refresh_period, rects[2], self.data_source.get_current_mono_channel_data)
+                self.mono = CircularAnimator(self.data_source, self.components[1], self, self.meter_parameters, needles[2], rects[2],
+                    self.data_source.get_current_mono_channel_data, self.meter_parameters[MONO_ORIGIN_X], self.meter_parameters[MONO_ORIGIN_Y])
                 self.mono.start()
 
     def reset_bgr_fgr(self, comp):
@@ -203,7 +206,11 @@ class Meter(Container):
         
         comp.bounding_box.x = comp.content_x
         comp.bounding_box.y = comp.content_y
-        comp.bounding_box.w = 1
+        w, h = comp.content[1].get_size()
+        if w > h:
+            comp.bounding_box.w = 1
+        else:
+            comp.bounding_box.h = 1
     
     def stop(self):
         """ Stop meter animation """

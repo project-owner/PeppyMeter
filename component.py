@@ -1,4 +1,4 @@
-# Copyright 2016-2018 Peppy Player peppy.player@gmail.com
+# Copyright 2016-2022 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -90,13 +90,16 @@ class Component(object):
         if isinstance(c, tuple):        
             comp = c[1]
         if comp and self.screen:
-            if self.bounding_box:
-                if isinstance(self.content, tuple):
-                    self.screen.blit(self.content[1], (self.content_x, self.content_y), self.bounding_box)
+            try:
+                if self.bounding_box:
+                    if isinstance(self.content, tuple):
+                        self.screen.blit(self.content[1], (self.content_x, self.content_y), self.bounding_box)
+                    else:
+                        self.screen.blit(self.content, self.bounding_box)
                 else:
-                    self.screen.blit(self.content, self.bounding_box)
-            else:
-                self.screen.blit(comp, (x, y))
+                    self.screen.blit(comp, (x, y))
+            except:
+                pass
  
     def update(self):
         """ Update Pygame Screen """
@@ -110,7 +113,10 @@ class Component(object):
         
         if not self.visible: return
         if self.screen:
-            pygame.display.update(r)      
+            try:
+                pygame.display.update(r)
+            except:
+                pass
         
     def set_visible(self, flag):
         """ Set component visibility 

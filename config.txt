@@ -5,6 +5,7 @@ meter.size = medium
 screen.width =
 screen.height =
 exit.on.touch = False
+stop.display.on.touch = False
 output.display = True
 output.serial = False
 output.i2c = False

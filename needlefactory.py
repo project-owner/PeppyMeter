@@ -1,4 +1,4 @@
-# Copyright 2016-2018 PeppyMeter peppy.player@gmail.com
+# Copyright 2016-2022 PeppyMeter peppy.player@gmail.com
 # 
 # This file is part of PeppyMeter.
 # 
@@ -15,42 +15,60 @@
 # You should have received a copy of the GNU General Public License
 # along with PeppyMeter. If not, see <http://www.gnu.org/licenses/>.
 
-import math
-import pygame as pg
+import pygame
 from configfileparser import *
 
 class NeedleFactory(object):
     """ Factory to prepare needle sprites for circular animator """
     
-    def __init__(self, name, image, config, needle_cache, mono_rect_cache, left_rect_cache, right_rect_cache):
+    def __init__(self, name, image, config, mono_needle_cache, mono_rect_cache, left_needle_cache, left_rect_cache, right_needle_cache, right_rect_cache):
         """ Initializer
         
+        :param name: meter name
         :param image: base needle image
         :param config: configuration dictionary
-        :param needle_cache: dictionary where key - meter name, value - list of needle sprites
+        :param mono_needle_cache: dictionary where key - meter name, value - list of mono needle sprites
         :param mono_rect_cache: dictionary where key - meter name, value - list of mono needle sprite rectangles
-        :param left_rect_cache: dictionary where key - meter name, value - list of left needle sprite rectangles
-        :param right_rect_cache: dictionary where key - meter name, value - list of right needle sprite rectangles
+        :param left_needle_cache: dictionary where key - meter name, value - list of left channel needle sprites
+        :param left_rect_cache: dictionary where key - meter name, value - list of left channel needle sprite rectangles
+        :param right_needle_cache: dictionary where key - meter name, value - list of right channel needle sprites
+        :param right_rect_cache: dictionary where key - meter name, value - list of right channel needle sprite rectangles
         """
         self.image = image
         self.config = config
-        self.needle_sprites = self.get_cached_object(name, needle_cache)
-        self.mono_needle_rects = self.get_cached_object(name, mono_rect_cache)
-        self.left_needle_rects = self.get_cached_object(name, left_rect_cache)
-        self.right_needle_rects = self.get_cached_object(name, right_rect_cache)
-        self.angle_range = abs(self.config[STOP_ANGLE] - self.config[START_ANGLE])
         
-        if len(self.needle_sprites) != 0:
-            return
-
         if config[CHANNELS] == 1:
-            self.create_needle_sprites(self.needle_sprites, self.mono_needle_rects, self.config[DISTANCE], self.config[MONO_ORIGIN_X] + self.config[METER_X], self.config[MONO_ORIGIN_Y] + self.config[METER_Y])
-            needle_cache[name] = self.needle_sprites
+            self.mono_needle_sprites = self.get_cached_object(name, mono_needle_cache)
+            self.mono_needle_rects = self.get_cached_object(name, mono_rect_cache)
+
+            if len(self.mono_needle_sprites) != 0:
+                return
+
+            self.create_needle_sprites(self.mono_needle_sprites, self.mono_needle_rects, self.config[DISTANCE],
+                self.config[START_ANGLE], self.config[STOP_ANGLE], False)
+            mono_needle_cache[name] = self.mono_needle_sprites
             mono_rect_cache[name] = self.mono_needle_rects
         elif config[CHANNELS] == 2:
-            self.create_needle_sprites(self.needle_sprites, self.left_needle_rects, self.config[DISTANCE], self.config[LEFT_ORIGIN_X] + self.config[METER_X], self.config[LEFT_ORIGIN_Y] + self.config[METER_Y])
-            self.create_needle_sprites(None, self.right_needle_rects, self.config[DISTANCE], self.config[RIGHT_ORIGIN_X] + self.config[METER_X], self.config[RIGHT_ORIGIN_Y] + self.config[METER_Y])
-            needle_cache[name] = self.needle_sprites
+            self.left_needle_sprites = self.get_cached_object(name, left_needle_cache)
+            self.right_needle_sprites = self.get_cached_object(name, right_needle_cache)
+            self.left_needle_rects = self.get_cached_object(name, left_rect_cache)
+            self.right_needle_rects = self.get_cached_object(name, right_rect_cache)
+
+            if len(self.left_needle_sprites) != 0:
+                return
+
+            self.create_needle_sprites(self.left_needle_sprites, self.left_needle_rects, self.config[DISTANCE],
+                self.config[LEFT_START_ANGLE], self.config[LEFT_STOP_ANGLE], self.config[LEFT_NEEDLE_FLIP])
+
+            if config[LEFT_START_ANGLE] == config[RIGHT_START_ANGLE] and config[LEFT_STOP_ANGLE] == config[RIGHT_STOP_ANGLE]:
+                self.right_needle_sprites = self.left_needle_sprites
+                self.right_needle_rects = self.left_needle_rects
+            else:
+                self.create_needle_sprites(self.right_needle_sprites, self.right_needle_rects, self.config[DISTANCE],
+                    self.config[RIGHT_START_ANGLE], self.config[RIGHT_STOP_ANGLE], self.config[RIGHT_NEEDLE_FLIP])
+
+            left_needle_cache[name] = self.left_needle_sprites
+            right_needle_cache[name] = self.right_needle_sprites
             left_rect_cache[name] = self.left_needle_rects
             right_rect_cache[name] = self.right_needle_rects
 
@@ -71,27 +89,53 @@ class NeedleFactory(object):
 
         return cached_object
 
-    def create_needle_sprites(self, needle_sprites, needle_rects, d, o_x, o_y):
-        """ Create needle sprites
+    def rotate_image(self, image, distance, angle):
+        """ Rotate provided image by specified angle
         
-        :param needle_sprites: list for image sprites
-        :param needle_rects: list for sprite bounding boxes
-        :param d: the distance beteen image center and rotation origin
-        :param o_x: x coordinate of the rotation origin
-        :param o_y: y coordinate of the rotation origin 
+        :param image: provided image
+        :param distance: distance between rotation origin and image center
+        :param angle: rotation angle
+
+        :return: tuple with rotated image and rectangle
         """
-        img = pg.transform.rotozoom(self.image, self.config[START_ANGLE], 1)
-        self.initial_angle = self.config[START_ANGLE]
-        start_angle = math.atan2(img.get_rect().h/2, -img.get_rect().w/2) - math.radians(self.config[START_ANGLE])
- 
-        for _ in range(self.angle_range * self.config[STEPS_PER_DEGREE]):
-            self.initial_angle = (self.initial_angle - 1/self.config[STEPS_PER_DEGREE]) % 360
-            new_angle = math.radians(self.initial_angle) + start_angle
-            new_center = (o_x + d * math.cos(new_angle), o_y - d * math.sin(new_angle))            
-            img = pg.transform.rotozoom(self.image, self.initial_angle, 1)
-            r = img.get_rect()
-            img = img.subsurface((r.x, r.y, r.w, r.h))
-            rect = img.get_rect(center=new_center)
-            if needle_sprites != None:
-                needle_sprites.append(img)
-            needle_rects.append(rect)     
+        w, h = image.get_size()
+        image_bottom = (w/2,  h)
+        distance_to_origin = (w/2, h/2 + distance)
+        image_rect = image.get_rect(topleft = (image_bottom [0] - distance_to_origin[0], image_bottom [1] - distance_to_origin[1]))
+        offset_origin_to_center = pygame.math.Vector2(image_bottom ) - image_rect.center
+        rotated_offset = offset_origin_to_center.rotate(-angle)
+        rotated_image_center = (image_bottom [0] - rotated_offset.x, image_bottom [1] - rotated_offset.y)
+        rotated_image = pygame.transform.rotozoom(image, angle, 1)
+        rotated_image_rect = rotated_image.get_rect(center = rotated_image_center)
+
+        return (rotated_image, rotated_image_rect)
+
+    def create_needle_sprites(self, needle_sprites, needle_rects, distance, start_angle, stop_angle, flip):
+        """ Create sprites for all angles
+
+        :param needle_sprites: list of sprite images
+        :param needle_rects: list of sprite rectangles
+        :param distance: distance between rotation origin and image center
+        :param start_angle: start angle
+        :param stop_angle: stop angle
+        :param flip: True - flip indicator image across X axis
+        """
+        images = []
+        rects = []
+        s = 1 / self.config[STEPS_PER_DEGREE]
+        s *= 2 * ((stop_angle > start_angle) ^ (s < 0)) - 1
+        angles = [start_angle + i * s for i in range(int((stop_angle - start_angle) / s + 1))]
+
+        if flip:
+            image = pygame.transform.flip(self.image, True, False)
+        else:
+            image = self.image
+
+        for a in angles:
+            i, r = self.rotate_image(image, distance, a)
+            images.append(i)
+            rects.append(r)
+
+        sprites = (images, rects)
+        needle_sprites.extend(sprites[0])
+        needle_rects.extend(sprites[1])

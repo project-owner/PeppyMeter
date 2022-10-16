@@ -29,10 +29,8 @@ from i2cinterface import I2CInterface
 from pwminterface import PWMInterface
 from httpinterface import HTTPInterface
 from screensavermeter import ScreensaverMeter
-from configfileparser import ConfigFileParser, SCREEN_RECT, SCREEN_INFO, WIDTH, HEIGHT, DEPTH, FRAME_RATE, EXIT_ON_TOUCH, \
-    OUTPUT_DISPLAY, OUTPUT_SERIAL, OUTPUT_I2C, OUTPUT_PWM, OUTPUT_HTTP, DATA_SOURCE, TYPE, USE_LOGGING, USE_VU_METER, \
-    SDL_ENV, FRAMEBUFFER_DEVICE, MOUSE_DEVICE, MOUSE_DRIVER, MOUSE_ENABLED, VIDEO_DRIVER, VIDEO_DISPLAY, DOUBLE_BUFFER, \
-    NO_FRAME
+from configfileparser import *
+
 class Peppymeter(ScreensaverMeter):
     """ Peppy Meter class """
     
@@ -215,16 +213,21 @@ class Peppymeter(ScreensaverMeter):
                     keys = pygame.key.get_pressed() 
                     if (keys[pygame.K_LCTRL] or keys[pygame.K_RCTRL]) and event.key == pygame.K_c:
                         running = False
-                elif event.type == pygame.MOUSEBUTTONUP and self.util.meter_config[EXIT_ON_TOUCH]:
+                elif event.type == pygame.MOUSEBUTTONUP and (self.util.meter_config[EXIT_ON_TOUCH] or self.util.meter_config[STOP_DISPLAY_ON_TOUCH]):
                     running = False
 
             self.refresh()
             clock.tick(self.util.meter_config[FRAME_RATE])
 
-        self.exit()
-    
+        if self.util.meter_config[STOP_DISPLAY_ON_TOUCH]:
+            self.meter.stop()
+            pygame.quit()
+        else:
+            self.exit()
+
     def stop(self):
-        """ Stop meter animation. """ 
+        """ Stop meter animation. """
+
         if not (self.util.meter_config[DATA_SOURCE][TYPE] == SOURCE_PIPE and self.use_vu_meter == True):
             self.data_source.stop_data_source()
         self.meter.stop()

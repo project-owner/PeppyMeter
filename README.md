@@ -1,3 +1,10 @@
+## Signac Edition 2022.10.16
+
+* Refactored the algorithms for circular and linear meters 
+* The changes allow to create vertical linear and  circular meters
+* The circular meter range can be more than 180 degrees now
+* Fixed rendering issues for several default meters
+
 ## Renoir Edition 2021.07.17
 
 * PeppyMeter can send HTTP requests with volume data to remote web servers

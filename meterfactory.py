@@ -1,4 +1,4 @@
-# Copyright 2016-2021 PeppyMeter peppy.player@gmail.com
+# Copyright 2016-2022 PeppyMeter peppy.player@gmail.com
 # 
 # This file is part of PeppyMeter.
 # 
@@ -25,7 +25,7 @@ from configfileparser import *
 class MeterFactory(object):
     """ Meter creation factory """
     
-    def __init__(self, util, meter_config, data_source, needle_cache, mono_rect_cache, left_rect_cache, right_rect_cache):
+    def __init__(self, util, meter_config, data_source, mono_needle_cache, mono_rect_cache, left_needle_cache, left_rect_cache, right_needle_cache, right_rect_cache):
         """ Initializer
         
         :param util: utility class
@@ -39,9 +39,11 @@ class MeterFactory(object):
         self.util = util
         self.meter_config = meter_config
         self.data_source = data_source
-        self.needle_cache = needle_cache
+        self.mono_needle_cache = mono_needle_cache
         self.mono_rect_cache = mono_rect_cache
+        self.left_needle_cache = left_needle_cache
         self.left_rect_cache = left_rect_cache
+        self.right_needle_cache = right_needle_cache
         self.right_rect_cache = right_rect_cache
         
     def create_meter(self):
@@ -67,14 +69,14 @@ class MeterFactory(object):
         config = self.meter_config[name]
         
         if config[CHANNELS] == 2:
-            meter = Meter(self.util, TYPE_LINEAR, config[UI_REFRESH_PERIOD], self.data_source)
+            meter = Meter(self.util, TYPE_LINEAR, config, self.data_source)
             meter.channels = 2
             meter.left_x = config[LEFT_X]
             meter.left_y = config[LEFT_Y]
             meter.right_x = config[RIGHT_X]
             meter.right_y = config[RIGHT_Y]            
         else:
-            meter = Meter(self.util, TYPE_LINEAR, config[UI_REFRESH_PERIOD], self.data_source)
+            meter = Meter(self.util, TYPE_LINEAR, config, self.data_source)
             meter.x = config[MONO_X]
             meter.y = config[MONO_Y]
         
@@ -112,35 +114,62 @@ class MeterFactory(object):
         config = self.meter_config[name]
         
         if config[CHANNELS] == 2:
-            meter = Meter(self.util, TYPE_CIRCULAR, config[UI_REFRESH_PERIOD], self.data_source)
+            meter = Meter(self.util, TYPE_CIRCULAR, config, self.data_source)
             meter.channels = 2
         else:
-            meter = Meter(self.util, TYPE_CIRCULAR, config[UI_REFRESH_PERIOD], self.data_source)
+            meter = Meter(self.util, TYPE_CIRCULAR, config, self.data_source)
 
-        meter.steps_per_degree = config[STEPS_PER_DEGREE]                 
-        start_angle = config[START_ANGLE]
-        stop_angle = config[STOP_ANGLE]
-        meter.incr = (abs(start_angle) + abs(stop_angle)) / 100
+        try:
+            start_angle = config[START_ANGLE]
+            stop_angle = config[STOP_ANGLE]
+        except:
+            start_angle = config[LEFT_START_ANGLE]
+            stop_angle = config[LEFT_STOP_ANGLE]
+
+        meter.steps_per_degree = config[STEPS_PER_DEGREE]
+        if start_angle > stop_angle:
+            meter.incr = abs(start_angle - stop_angle) / 100
+        elif start_angle < stop_angle:
+            meter.incr = abs(stop_angle - start_angle) / 100
+        else:
+            meter.incr = (abs(start_angle) + abs(stop_angle)) / 100
         meter.add_background(config[BGR_FILENAME], config[METER_X], config[METER_Y])
         needle = meter.load_image(config[INDICATOR_FILENAME])[1]
+        w, h = needle.get_size()
+        config[NEEDLE_WIDTH] = w
+        config[NEEDLE_HEIGHT] = h
         
-        factory = NeedleFactory(name, needle, config, self.needle_cache, self.mono_rect_cache, self.left_rect_cache, self.right_rect_cache)
-        meter.needle_sprites = factory.needle_sprites
+        factory = NeedleFactory(name, needle, config, self.mono_needle_cache, self.mono_rect_cache, self.left_needle_cache, self.left_rect_cache, self.right_needle_cache, self.right_rect_cache)
         
         if config[CHANNELS] == 2:
+            meter.left_needle_sprites = factory.left_needle_sprites
+            meter.right_needle_sprites = factory.right_needle_sprites
             meter.left_needle_rects = factory.left_needle_rects
             meter.right_needle_rects = factory.right_needle_rects
-            meter.left_needle_rects = factory.left_needle_rects     
-            s = meter.needle_sprites[0]
-            r = meter.left_needle_rects[0]
-            meter.add_image(s, 0, 0, r)
-            r = meter.right_needle_rects[0]
-            meter.add_image(s, 0, 0, r)
+            meter.left_needle_rects = factory.left_needle_rects
+
+            sprites_left = meter.left_needle_sprites[0]
+            rect_left = meter.left_needle_rects[0]
+            rc = rect_left.copy()
+            rc.x += config[LEFT_ORIGIN_X] - w/2
+            rc.y += config[LEFT_ORIGIN_Y] - h
+            meter.add_image(sprites_left, 0, 0, rc)
+
+            sprites_right = meter.right_needle_sprites[0]
+            rect_right = meter.right_needle_rects[0]
+            rc = rect_right.copy()
+            rc.x += config[RIGHT_ORIGIN_X] - w/2
+            rc.y += config[RIGHT_ORIGIN_Y] - h
+            meter.add_image(sprites_right, 0, 0, rc)
         else:
+            meter.mono_needle_sprites = factory.mono_needle_sprites
             meter.mono_needle_rects = factory.mono_needle_rects     
-            s = meter.needle_sprites[0]
+            s = meter.mono_needle_sprites[0]
             r = meter.mono_needle_rects[0]
-            meter.add_image(s, 0, 0, r)
+            rc = r.copy()
+            rc.x += config[MONO_ORIGIN_X] - w/2
+            rc.y += config[MONO_ORIGIN_Y] - h
+            meter.add_image(s, 0, 0, rc)
         
         if config[FGR_FILENAME]:
             meter.add_foreground(config[FGR_FILENAME])

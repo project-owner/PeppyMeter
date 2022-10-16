@@ -1,4 +1,4 @@
-# Copyright 2016-2021 PeppyMeter peppy.player@gmail.com
+# Copyright 2016-2022 PeppyMeter peppy.player@gmail.com
 # 
 # This file is part of PeppyMeter.
 # 
@@ -16,24 +16,27 @@
 # along with PeppyMeter. If not, see <http://www.gnu.org/licenses/>.
 
 import time
+
 from threading import Thread
 
 class LinearAnimator(Thread):
     """ Provides linear animation in a separate thread """
     
-    def __init__(self, data_source, components, base, ui_refresh_period):
+    def __init__(self, data_source, components, base, ui_refresh_period, origin_y):
         """ Initializer
         
         :param data_source: data source
         :param components: UI component
         :param base: meter base
-        :param ui_refresh_period: animation interval 
+        :param ui_refresh_period: animation interval
+		:param origin_y: origin Y
         """
         Thread.__init__(self)
-        self.indicator_height = 30 
         self.index = 0
         self.data_source = data_source
         self.components = components
+        self.origin_y = origin_y
+        self.comp_width, self.comp_height = components[1].content[1].get_size()
         self.run_flag = True
         self.base = base
         self.ui_refresh_period = ui_refresh_period
@@ -81,10 +84,17 @@ class LinearAnimator(Thread):
         if n >= len(self.base.masks): n = len(self.base.masks) - 1            
         w = self.base.masks[n]
         if w == 0: w = 1
-                
-        component.bounding_box.w = w
-        component.bounding_box.x = 0          
-        component.bounding_box.y = 0
+
+        if self.comp_width > self.comp_height:
+            component.bounding_box.w = w
+            component.bounding_box.x = 0
+            component.bounding_box.y = 0
+        else:
+            component.bounding_box.h = w
+            component.bounding_box.x = 0
+            component.bounding_box.y = self.comp_height - w
+            component.content_y = self.origin_y + self.comp_height - w
+
         component.draw()
             
         r = component.bounding_box.copy()
@@ -97,4 +107,3 @@ class LinearAnimator(Thread):
         self.base.update_rectangle(u)
         
         return (r.copy(), volume)
-        
