@@ -101,7 +101,6 @@ class Meter(Container):
         r = img[1].get_rect()
         r.x = self.origin_x + x
         r.y = self.origin_y + y
-        r.w = 100
         self.add_image(img, self.origin_x + x, self.origin_y + y, r)
     
     def load_image(self, image_name):
