@@ -1,4 +1,4 @@
-# Copyright 2016-2022 PeppyMeter peppy.player@gmail.com
+# Copyright 2016-2023 PeppyMeter peppy.player@gmail.com
 # 
 # This file is part of PeppyMeter.
 # 
@@ -219,10 +219,13 @@ class Meter(Container):
             self.animator = None
         elif self.meter_type == TYPE_CIRCULAR:
             if self.channels == 2:
-                self.left.stop_thread()
-                self.right.stop_thread()
-                self.left = None
-                self.right = None
+                if self.left:
+                    self.left.stop_thread()
+                    self.left = None
+                if self.right:
+                    self.right.stop_thread()
+                    self.right = None
             else:
-                self.mono.stop_thread()
-                self.mono = None
+                if self.mono:
+                    self.mono.stop_thread()
+                    self.mono = None

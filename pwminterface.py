@@ -1,4 +1,4 @@
-# Copyright 2019 PeppyMeter peppy.player@gmail.com
+# Copyright 2019-2023 PeppyMeter peppy.player@gmail.com
 # 
 # This file is part of PeppyMeter.
 # 
@@ -92,7 +92,7 @@ class PWMInterface(object):
         while self.running:
             time.sleep(self.update_period)
             
-            v = self.data_source.get_value()
+            v = self.data_source.get_current_data()
             
             if v == 0:
                 continue

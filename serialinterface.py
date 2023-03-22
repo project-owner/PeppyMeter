@@ -1,4 +1,4 @@
-# Copyright 2016-2019 PeppyMeter peppy.player@gmail.com
+# Copyright 2016-2023 PeppyMeter peppy.player@gmail.com
 # 
 # This file is part of PeppyMeter.
 # 
@@ -75,12 +75,12 @@ class SerialInterface():
         """ Write data into serial interface """
         
         while self.running:
-            v = self.data_source.get_value()
-            data = self.get_data(v[0], v[1])
-            logging.debug("Serial output: " + data.rstrip())
-                         
-            self.serial_interface.write(data.encode("utf-8"))
-#             self.serial_interface.readline()               
+            v = self.data_source.get_current_data()
+            if v:
+                data = self.get_data(v[0], v[1])
+                logging.debug("Serial output: " + data.rstrip())
+
+                self.serial_interface.write(data.encode("utf-8"))
             time.sleep(self.update_period)
     
     def get_data(self, left, right):

@@ -1,4 +1,4 @@
-# Copyright 2016-2018 PeppyMeter peppy.player@gmail.com
+# Copyright 2016-2023 PeppyMeter peppy.player@gmail.com
 # 
 # This file is part of PeppyMeter.
 # 
@@ -100,7 +100,7 @@ class I2CInterface(object):
         """ Method of the writing thread """
         
         while self.running:
-            v = self.data_source.get_value()
+            v = self.data_source.get_current_data()
             left = self.get_bits(v[0])
             right = self.get_bits(v[1])
             
