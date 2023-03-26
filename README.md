@@ -1,3 +1,8 @@
+## Marc Edition 2023.03.21
+
+* Fixed HTTP output for VU Meter screensaver
+* Eliminated lag in multiple VU Meter types running concurrently
+
 ## Signac Edition 2022.10.16
 
 * Refactored the algorithms for circular and linear meters 
