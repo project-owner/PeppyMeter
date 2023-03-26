@@ -82,7 +82,7 @@ class Peppymeter(ScreensaverMeter):
             self.util.meter_config[DATA_SOURCE][TYPE] = SOURCE_NOISE
         
         self.data_source = DataSource(self.util.meter_config)
-        if self.use_vu_meter == True:
+        if self.util.meter_config[DATA_SOURCE][TYPE] or self.use_vu_meter == True:
             self.data_source.start_data_source()
         
         if self.util.meter_config[OUTPUT_DISPLAY]:
