@@ -1,4 +1,4 @@
-# Copyright 2016-2022 PeppyMeter peppy.player@gmail.com
+# Copyright 2016-2023 PeppyMeter peppy.player@gmail.com
 # 
 # This file is part of PeppyMeter.
 # 
@@ -123,7 +123,12 @@ class MeterFactory(object):
             start_angle = config[START_ANGLE]
             stop_angle = config[STOP_ANGLE]
         except:
+            pass
+			
+        if start_angle == None:
             start_angle = config[LEFT_START_ANGLE]
+			
+        if stop_angle == None:
             stop_angle = config[LEFT_STOP_ANGLE]
 
         meter.steps_per_degree = config[STEPS_PER_DEGREE]

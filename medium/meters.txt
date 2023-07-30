@@ -303,6 +303,7 @@ screen.bgr =
 [vertical-linear]
 meter.type = linear
 channels = 2
+direction = bottom-top
 ui.refresh.period = 0.033
 bgr.filename = vertical-linear-bgr.png
 indicator.filename = vertical-linear-indicator.png
@@ -373,4 +374,67 @@ mono.origin.x = 243
 mono.origin.y = 160
 meter.x = 0
 meter.y = 0
+screen.bgr =
+
+[relax]
+meter.type = linear
+channels = 2
+direction = center-edges
+flip.left.x = True
+ui.refresh.period = 0.033
+bgr.filename = relax-bgr.jpg
+indicator.filename = relax-indicator.png
+left.x = 233
+left.y = 278
+right.x = 246
+right.y = 278       
+position.regular = 16
+step.width.regular = 14
+screen.bgr =
+
+[steam-punk]
+meter.type = linear
+channels = 2
+direction = top-bottom
+flip.right.x = True
+ui.refresh.period = 0.033
+bgr.filename = steam-punk-bgr.jpg
+indicator.filename = steam-punk-indicator.png
+left.x = 0
+left.y = 0
+right.x = 400
+right.y = 0
+position.regular = 23
+step.width.regular = 14
+screen.bgr =
+
+[fantasy]
+meter.type = linear
+channels = 2
+direction = edges-center
+flip.right.x = True
+ui.refresh.period = 0.033
+bgr.filename = fantasy-bgr.jpg
+indicator.filename = fantasy-indicator.png
+left.x = 10
+left.y = 284
+right.x = 469
+right.y = 284      
+position.regular = 10
+step.width.regular = 23
+screen.bgr =
+
+[chillout]
+meter.type = linear
+channels = 2
+indicator.type = single
+ui.refresh.period = 0.033
+bgr.filename = chillout-bgr.jpg
+indicator.filename = chillout-indicator.png
+left.x = 28
+left.y = 240
+right.x = 28
+right.y = 258      
+position.regular = 201
+step.width.regular = 2
 screen.bgr =

@@ -1,4 +1,4 @@
-# Copyright 2016-2018 PeppyMeter peppy.player@gmail.com
+# Copyright 2016-2023 PeppyMeter peppy.player@gmail.com
 # 
 # This file is part of PeppyMeter.
 # 
@@ -31,10 +31,7 @@ class MaskFactory(object):
         :param step_width_regular: the width in pixels of the regular step
         :param step_width_overload: the width in pixels of the overload step
         """
-        steps = positions_regular + positions_overload + 1
-        self.step = 100/steps
-        masks = list()
-        masks.append(0)
+        masks = [0]
              
         for n in range(1, positions_regular + 1):
             masks.append(n * step_width_regular)

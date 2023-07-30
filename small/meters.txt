@@ -303,6 +303,7 @@ screen.bgr =
 [vertical-linear]
 meter.type = linear
 channels = 2
+direction = bottom-top
 ui.refresh.period = 0.033
 bgr.filename = vertical-linear-bgr.png
 indicator.filename = vertical-linear-indicator.png
