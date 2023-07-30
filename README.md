@@ -1,6 +1,6 @@
 ## Kandinsky Edition 2023.07.30
 
-* Implemented new linear meter type movement directions (top-bottom, center-edges, edges-center)
+* Implemented new linear meter movement directions (top-bottom, center-edges, edges-center)
 * Implemented knob based linear meter (indicator.type = single)
 * Added four new meters of the medium size (chillout, fantasy, relax, steam-punk). The meters use AI generated backgrounds.
 
