@@ -54,6 +54,7 @@ class LinearAnimator(Thread):
         self.fgr = self.base.fgr
         self.indicator_type = indicator_type
         self.indicator_width = self.components[1].content[1].get_size()[0]
+        self.indicator_height = self.components[1].content[1].get_size()[1]
         self.direction = direction
 
         if direction == None:
@@ -148,6 +149,7 @@ class LinearAnimator(Thread):
             component.bounding_box.x = 0
             component.bounding_box.y = 0
             component.bounding_box.w = self.indicator_width
+            component.bounding_box.h = self.indicator_height
             component.content_x = self.origin_x + w
 
         component.draw()
