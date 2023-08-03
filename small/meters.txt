@@ -375,3 +375,66 @@ mono.origin.y = 120
 meter.x = 0
 meter.y = 0
 screen.bgr =
+
+[relax]
+meter.type = linear
+channels = 2
+direction = center-edges
+flip.left.x = True
+ui.refresh.period = 0.033
+bgr.filename = relax-bgr.jpg
+indicator.filename = relax-indicator.png
+left.x = 156
+left.y = 211
+right.x = 164
+right.y = 211       
+position.regular = 16
+step.width.regular = 9
+screen.bgr =
+
+[steam-punk]
+meter.type = linear
+channels = 2
+direction = top-bottom
+flip.right.x = True
+ui.refresh.period = 0.033
+bgr.filename = steam-punk-bgr.jpg
+indicator.filename = steam-punk-indicator.png
+left.x = 0
+left.y = 1
+right.x = 254
+right.y = 1
+position.regular = 20
+step.width.regular = 12
+screen.bgr =
+
+[fantasy]
+meter.type = linear
+channels = 2
+direction = edges-center
+flip.right.x = True
+ui.refresh.period = 0.033
+bgr.filename = fantasy-bgr.jpg
+indicator.filename = fantasy-indicator.png
+left.x = 11
+left.y = 218
+right.x = 310
+right.y = 218      
+position.regular = 10
+step.width.regular = 15
+screen.bgr =
+
+[chillout]
+meter.type = linear
+channels = 2
+indicator.type = single
+ui.refresh.period = 0.033
+bgr.filename = chillout-bgr.jpg
+indicator.filename = chillout-indicator.png
+left.x = 13
+left.y = 184
+right.x = 13
+right.y = 196      
+position.regular = 137
+step.width.regular = 2
+screen.bgr =
