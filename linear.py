@@ -25,7 +25,7 @@ from configfileparser import DIRECTION_LEFT_RIGHT, DIRECTION_BOTTOM_TOP, DIRECTI
 class LinearAnimator(Thread):
     """ Provides linear animation in a separate thread """
     
-    def __init__(self, data_source, components, base, ui_refresh_period, origin_x, origin_y, direction,
+    def __init__(self, data_source, components, base, ui_refresh_period, direction,
                  indicator_type=None, flip_left_x=None, flip_right_x=None):
         """ Initializer
         
@@ -33,8 +33,6 @@ class LinearAnimator(Thread):
         :param components: UI component
         :param base: meter base
         :param ui_refresh_period: animation interval
-        :param origin_x: origin X
-        :param origin_y: origin Y
         :param direction: indicator moving direction
         :param indicator_type: idinicator type e.g. 'single'
         :param flip_left_x: flip left channel image horizontally
@@ -44,8 +42,6 @@ class LinearAnimator(Thread):
         self.index = 0
         self.data_source = data_source
         self.components = components
-        self.origin_x = origin_x
-        self.origin_y = origin_y
         self.comp_width, self.comp_height = components[1].content[1].get_size()
         self.run_flag = True
         self.base = base
@@ -118,12 +114,12 @@ class LinearAnimator(Thread):
             component.bounding_box.h = w
             component.bounding_box.x = 0
             component.bounding_box.y = self.comp_height - w
-            component.content_y = self.origin_y + self.comp_height - w
+            component.content_y = component.origin_y + self.comp_height - w
         elif self.direction == DIRECTION_TOP_BOTTOM:
             component.bounding_box.h = w
             component.bounding_box.x = 0
             component.bounding_box.y = 0
-            component.content_y = self.origin_y
+            component.content_y = component.origin_y
         elif self.direction == DIRECTION_EDGES_CENTER:
             if left:
                 component.bounding_box.w = w
@@ -139,7 +135,7 @@ class LinearAnimator(Thread):
                 component.bounding_box.w = w
                 component.bounding_box.x = self.comp_width - w
                 component.bounding_box.y = 0
-                component.content_x = self.origin_x - w
+                component.content_x = component.origin_x - w
             else:
                 component.bounding_box.w = w
                 component.bounding_box.x = 0
@@ -150,7 +146,7 @@ class LinearAnimator(Thread):
             component.bounding_box.y = 0
             component.bounding_box.w = self.indicator_width
             component.bounding_box.h = self.indicator_height
-            component.content_x = self.origin_x + w
+            component.content_x = component.origin_x + w
 
         component.draw()
             
