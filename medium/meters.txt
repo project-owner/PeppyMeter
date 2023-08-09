@@ -428,6 +428,7 @@ screen.bgr =
 meter.type = linear
 channels = 2
 indicator.type = single
+direction = left-right
 ui.refresh.period = 0.033
 bgr.filename = chillout-bgr.jpg
 indicator.filename = chillout-indicator.png

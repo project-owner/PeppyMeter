@@ -105,48 +105,57 @@ class LinearAnimator(Thread):
         if n >= len(self.base.masks): n = len(self.base.masks) - 1            
         w = self.base.masks[n]
         if w == 0: w = 1
-
-        if self.direction == DIRECTION_LEFT_RIGHT:
-            component.bounding_box.w = w
-            component.bounding_box.x = 0
-            component.bounding_box.y = 0
-        elif self.direction == DIRECTION_BOTTOM_TOP:
-            component.bounding_box.h = w
-            component.bounding_box.x = 0
-            component.bounding_box.y = self.comp_height - w
-            component.content_y = component.origin_y + self.comp_height - w
-        elif self.direction == DIRECTION_TOP_BOTTOM:
-            component.bounding_box.h = w
-            component.bounding_box.x = 0
-            component.bounding_box.y = 0
-            component.content_y = component.origin_y
-        elif self.direction == DIRECTION_EDGES_CENTER:
-            if left:
-                component.bounding_box.w = w
-                component.bounding_box.x = 0
-                component.bounding_box.y = 0
-            else:
-                component.bounding_box.w = w
-                component.bounding_box.x = self.comp_width - w
-                component.bounding_box.y = 0
-                component.content_x = self.right_origin_x - w
-        elif self.direction == DIRECTION_CENTER_EDGES:
-            if left:
-                component.bounding_box.w = w
-                component.bounding_box.x = self.comp_width - w
-                component.bounding_box.y = 0
-                component.content_x = component.origin_x - w
-            else:
-                component.bounding_box.w = w
-                component.bounding_box.x = 0
-                component.bounding_box.y = 0
+        component.bounding_box.x = 0
+        component.bounding_box.y = 0
 
         if self.indicator_type == SINGLE:
-            component.bounding_box.x = 0
-            component.bounding_box.y = 0
             component.bounding_box.w = self.indicator_width
             component.bounding_box.h = self.indicator_height
-            component.content_x = component.origin_x + w
+            component.content_y = component.origin_y
+
+            if self.direction == DIRECTION_BOTTOM_TOP:
+                component.content_x = component.origin_x
+                component.content_y = component.origin_y - w
+            elif self.direction == DIRECTION_TOP_BOTTOM:
+                component.content_x = component.origin_x
+                component.content_y = component.origin_y + w
+            elif self.direction == DIRECTION_CENTER_EDGES:
+                if left:
+                    component.content_x = component.origin_x - w
+                else:
+                    component.content_x = component.origin_x + w
+            elif self.direction == DIRECTION_EDGES_CENTER:
+                if left:
+                    component.content_x = component.origin_x + w
+                else:
+                    component.content_x = component.origin_x - w
+            elif self.direction == DIRECTION_LEFT_RIGHT:
+                component.content_x = component.origin_x + w
+        else:
+            if self.direction == DIRECTION_LEFT_RIGHT:
+                component.bounding_box.w = w
+            elif self.direction == DIRECTION_BOTTOM_TOP:
+                component.bounding_box.h = w
+                component.bounding_box.y = self.comp_height - w
+                component.content_y = component.origin_y + self.comp_height - w
+            elif self.direction == DIRECTION_TOP_BOTTOM:
+                component.bounding_box.h = w
+                component.content_y = component.origin_y
+            elif self.direction == DIRECTION_EDGES_CENTER:
+                if left:
+                    component.bounding_box.w = w
+                else:
+                    component.bounding_box.w = w
+                    component.bounding_box.x = self.comp_width - w
+                    if hasattr(self, "right_origin_x"):
+                        component.content_x = self.right_origin_x - w
+            elif self.direction == DIRECTION_CENTER_EDGES:
+                if left:
+                    component.bounding_box.w = w
+                    component.bounding_box.x = self.comp_width - w
+                    component.content_x = component.origin_x - w
+                else:
+                    component.bounding_box.w = w
 
         component.draw()
             
