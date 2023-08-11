@@ -107,10 +107,10 @@ class LinearAnimator(Thread):
         if w == 0: w = 1
         component.bounding_box.x = 0
         component.bounding_box.y = 0
+        component.bounding_box.w = self.indicator_width
+        component.bounding_box.h = self.indicator_height
 
         if self.indicator_type == SINGLE:
-            component.bounding_box.w = self.indicator_width
-            component.bounding_box.h = self.indicator_height
             component.content_y = component.origin_y
 
             if self.direction == DIRECTION_BOTTOM_TOP:
