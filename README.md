@@ -1,3 +1,7 @@
+## Malevich Edition 2024.01.08
+
+* Introduced a parameter which allows to switch random meters programmatically
+
 ## Kandinsky Edition 2023.07.30
 
 * Implemented new linear meter movement directions (top-bottom, center-edges, edges-center)
