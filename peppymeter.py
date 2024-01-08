@@ -34,7 +34,7 @@ from configfileparser import *
 class Peppymeter(ScreensaverMeter):
     """ Peppy Meter class """
     
-    def __init__(self, util=None, standalone=False):
+    def __init__(self, util=None, standalone=False, timer_controlled_random_meter=True):
         """ Initializer
         
         :param util: utility object
@@ -60,6 +60,7 @@ class Peppymeter(ScreensaverMeter):
         self.util.meter_config = parser.meter_config
         self.util.exit_function = self.exit
         self.outputs = {}
+        self.timer_controlled_random_meter = timer_controlled_random_meter
         
         if standalone:
             if self.util.meter_config[USE_LOGGING]:
@@ -109,7 +110,7 @@ class Peppymeter(ScreensaverMeter):
         :data_source: data source
         :return: graphical VU Meter
         """
-        meter = Vumeter(self.util, data_source)         
+        meter = Vumeter(self.util, data_source, self.timer_controlled_random_meter)
         self.current_image = None
         self.update_period = meter.get_update_period()
         
@@ -222,6 +223,11 @@ class Peppymeter(ScreensaverMeter):
 
         self.meter.stop()
     
+    def restart(self):
+        """ Restart random meter """
+
+        self.meter.restart()
+
     def refresh(self):
         """ Refresh meter. Used to switch from one random meter to another. """
         

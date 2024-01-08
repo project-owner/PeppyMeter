@@ -27,7 +27,7 @@ from configfileparser import METER, METER_NAMES, RANDOM_METER_INTERVAL, USE_CACH
 class Vumeter(ScreensaverMeter):
     """ VU Meter plug-in. """
     
-    def __init__(self, util, data_source):
+    def __init__(self, util, data_source, timer_controlled_random_meter=True):
         """ Initializer
         
         :param util: utility class
@@ -39,6 +39,7 @@ class Vumeter(ScreensaverMeter):
         self.meter_names = self.util.meter_config[METER_NAMES]
         self.random_meter_interval = int(self.util.meter_config[RANDOM_METER_INTERVAL] / 0.033)
         self.data_source = data_source
+        self.timer_controlled_random_meter = timer_controlled_random_meter
         self.random_meter = False
         self.list_meter = False
         self.list_meter_index = 0
@@ -128,13 +129,21 @@ class Vumeter(ScreensaverMeter):
             self.right_needle_cache = {}
             self.right_rect_cache = {}
             self.meter = None
+
+    def restart(self):
+        """ Restart random meter """
+
+        self.stop()
+        time.sleep(0.2) # let threads stop
+        self.start()
     
     def refresh(self):
-        """ Refresh meter. Used to update random meter. """ 
+        """ Refresh meter. Used to update random meter. """
+
+        if not self.timer_controlled_random_meter:
+            return
                
         if (self.random_meter or self.list_meter) and self.seconds == self.random_meter_interval:
             self.seconds = 0
-            self.stop()
-            time.sleep(0.2) # let threads stop
-            self.start()
+            self.restart()
         self.seconds += 1
