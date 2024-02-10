@@ -1,4 +1,4 @@
-# Copyright 2016-2023 PeppyMeter peppy.player@gmail.com
+# Copyright 2016-2024 PeppyMeter peppy.player@gmail.com
 # 
 # This file is part of PeppyMeter.
 # 
@@ -50,13 +50,7 @@ class Peppymeter(ScreensaverMeter):
         
         self.name = "peppymeter"
 
-        base_path = "."
-        if __package__:
-            pkg_parts = __package__.split(".")
-            if len(pkg_parts) > 0:
-                base_path = os.path.join(os.getcwd(), "screensaver", self.name)
-        
-        parser = ConfigFileParser(base_path)
+        parser = ConfigFileParser()
         self.util.meter_config = parser.meter_config
         self.util.exit_function = self.exit
         self.outputs = {}
@@ -165,7 +159,7 @@ class Peppymeter(ScreensaverMeter):
             else:
                 self.util.PYGAME_SCREEN = pygame.display.set_mode((screen_w, screen_h))
 
-        self.util.meter_config[SCREEN_RECT] = pygame.Rect(0, 0, screen_w, screen_h) 
+        self.util.meter_config[SCREEN_RECT] = pygame.Rect(0, 0, screen_w, screen_h)
     
     def start_interface_outputs(self):
         """ Starts writing to interfaces """
@@ -180,16 +174,18 @@ class Peppymeter(ScreensaverMeter):
         if self.util.meter_config[DATA_SOURCE][TYPE] == SOURCE_PIPE or self.use_vu_meter == True:
             self.data_source.start_data_source()
         self.meter.start()
+        pygame.display.update(self.util.meter_config[SCREEN_RECT])
 
         for v in self.outputs.values():
             v.start_writing()
-        
+
     def start_display_output(self):
         """ Start thread for graphical VU meter """
         
         pygame.event.clear()
         clock = Clock()
         self.meter.start()
+        pygame.display.update(self.util.meter_config[SCREEN_RECT])
         running = True
 
         while running:
@@ -204,6 +200,8 @@ class Peppymeter(ScreensaverMeter):
                     running = False
 
             self.refresh()
+            areas = self.meter.run()
+            pygame.display.update(areas)
             clock.tick(self.util.meter_config[FRAME_RATE])
 
         if self.util.meter_config[STOP_DISPLAY_ON_TOUCH]:
@@ -261,6 +259,7 @@ class Peppymeter(ScreensaverMeter):
        
 if __name__ == "__main__":
     """ This is called by stand-alone PeppyMeter """
+
     pm = Peppymeter(standalone=True)
     source = pm.util.meter_config[DATA_SOURCE][TYPE]
 

@@ -1,4 +1,4 @@
-# Copyright 2016-2022 PeppyMeter peppy.player@gmail.com
+# Copyright 2016-2024 PeppyMeter peppy.player@gmail.com
 # 
 # This file is part of PeppyMeter.
 # 
@@ -17,12 +17,12 @@
 
 import time
 import copy
-import sys
+import pygame
 
 from random import randrange
 from meterfactory import MeterFactory
 from screensavermeter import ScreensaverMeter
-from configfileparser import METER, METER_NAMES, RANDOM_METER_INTERVAL, USE_CACHE
+from configfileparser import METER, METER_NAMES, RANDOM_METER_INTERVAL, USE_CACHE, SCREEN_RECT
 
 class Vumeter(ScreensaverMeter):
     """ VU Meter plug-in. """
@@ -100,6 +100,15 @@ class Vumeter(ScreensaverMeter):
 
         if hasattr(self, "callback_start"):
             self.callback_start(self.meter)
+
+    def run(self):
+        """ Run meter  
+        
+        :return: list of rectangles for update
+        """
+        if self.meter:
+            return self.meter.run()
+        return None
     
     def stop(self):
         """ Stop meter animation. """ 
@@ -136,6 +145,7 @@ class Vumeter(ScreensaverMeter):
         self.stop()
         time.sleep(0.2) # let threads stop
         self.start()
+        pygame.display.update(self.util.meter_config[SCREEN_RECT])
     
     def refresh(self):
         """ Refresh meter. Used to update random meter. """

@@ -1,4 +1,4 @@
-# Copyright 2016-2023 PeppyMeter peppy.player@gmail.com
+# Copyright 2016-2024 PeppyMeter peppy.player@gmail.com
 # 
 # This file is part of PeppyMeter.
 # 
@@ -113,7 +113,7 @@ class Meter(Container):
         :param image_name: the image name
         """
         base_path = self.meter_config[BASE_PATH]
-        folder = self.meter_config[SCREEN_INFO][METER_SIZE]
+        folder = self.meter_config[SCREEN_INFO][METER_FOLDER]
         path = os.path.join(base_path, folder,  image_name)        
         return self.util.load_pygame_image(path)
     
@@ -176,26 +176,36 @@ class Meter(Container):
         if self.fgr: self.reset_bgr_fgr(self.fgr)
         
         super(Meter, self).draw()
-        self.update()
         needles = (self.left_needle_sprites, self.right_needle_sprites, self.mono_needle_sprites)
         rects = (self.left_needle_rects, self.right_needle_rects, self.mono_needle_rects)
 
         if self.meter_type == TYPE_LINEAR:
             self.animator = LinearAnimator(self.data_source, self.components, self, self.ui_refresh_period,
                                            self.direction, self.indicator_type, self.flip_left_x, self.flip_right_x)
-            self.animator.start()
         elif self.meter_type == TYPE_CIRCULAR:
             if self.channels == 2:
                 self.left = CircularAnimator(self.data_source, self.components[1], self, self.meter_parameters, needles[0], rects[0],
                     self.data_source.get_current_left_channel_data, self.meter_parameters[LEFT_ORIGIN_X], self.meter_parameters[LEFT_ORIGIN_Y])
                 self.right = CircularAnimator(self.data_source, self.components[2], self, self.meter_parameters, needles[1], rects[1],
                     self.data_source.get_current_right_channel_data, self.meter_parameters[RIGHT_ORIGIN_X], self.meter_parameters[RIGHT_ORIGIN_Y])
-                self.left.start()
-                self.right.start()
             else:
                 self.mono = CircularAnimator(self.data_source, self.components[1], self, self.meter_parameters, needles[2], rects[2],
                     self.data_source.get_current_mono_channel_data, self.meter_parameters[MONO_ORIGIN_X], self.meter_parameters[MONO_ORIGIN_Y])
-                self.mono.start()
+
+    def run (self):
+        """ Run the current meter  
+        
+        :return: list of rectangles for update
+        """
+        if self.meter_type == TYPE_LINEAR:
+            return self.animator.run()
+        elif self.meter_type == TYPE_CIRCULAR:
+            if self.channels == 2:
+                return [self.left.run(), self.right.run()]
+            else:
+                return [self.mono.run()]
+
+        return None
 
     def reset_bgr_fgr(self, comp):
         """ Reset background or foreground bounding box  
@@ -221,17 +231,10 @@ class Meter(Container):
         """ Stop meter animation """
         
         if self.meter_type == TYPE_LINEAR:
-            self.animator.stop_thread()
             self.animator = None
         elif self.meter_type == TYPE_CIRCULAR:
             if self.channels == 2:
-                if self.left:
-                    self.left.stop_thread()
-                    self.left = None
-                if self.right:
-                    self.right.stop_thread()
-                    self.right = None
+                self.left = None
+                self.right = None
             else:
-                if self.mono:
-                    self.mono.stop_thread()
-                    self.mono = None
+                self.mono = None

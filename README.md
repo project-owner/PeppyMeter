@@ -1,3 +1,9 @@
+## Picasso Edition 2024.02.10
+
+* Moved a screen update functionality to the main event loop
+* Removed redundant animation threads
+* Redesigned meter folders structure. Introduced naming convention for meter folders.
+
 ## Malevich Edition 2024.01.08
 
 * Introduced a parameter which allows to switch random meters programmatically

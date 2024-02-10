@@ -1,4 +1,4 @@
-# Copyright 2016-2018 Peppy Player peppy.player@gmail.com
+# Copyright 2016-2024 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -50,8 +50,7 @@ class Container(Component):
         
         self.clean()
         self.draw()
-        self.update()
-            
+
     def handle_event(self, event):
         """ Handle container event. Don't handle event if container is invisible.
         
@@ -122,6 +121,3 @@ class Container(Component):
         if press: button.add_press_listener(update_observer)
         if release: button.add_release_listener(update_observer)
         if redraw_observer: button.add_release_listener(redraw_observer)
-        
-    
-            

@@ -1,4 +1,4 @@
-# Copyright 2016-2023 PeppyMeter peppy.player@gmail.com
+# Copyright 2016-2024 PeppyMeter peppy.player@gmail.com
 # 
 # This file is part of PeppyMeter.
 # 
@@ -15,15 +15,13 @@
 # You should have received a copy of the GNU General Public License
 # along with PeppyMeter. If not, see <http://www.gnu.org/licenses/>.
 
-import time
 import pygame
 
-from threading import Thread
 from configfileparser import DIRECTION_LEFT_RIGHT, DIRECTION_BOTTOM_TOP, DIRECTION_TOP_BOTTOM, \
     DIRECTION_EDGES_CENTER, DIRECTION_CENTER_EDGES, SINGLE
 
-class LinearAnimator(Thread):
-    """ Provides linear animation in a separate thread """
+class LinearAnimator(object):
+    """ Provides linear animation """
     
     def __init__(self, data_source, components, base, ui_refresh_period, direction,
                  indicator_type=None, flip_left_x=None, flip_right_x=None):
@@ -38,7 +36,6 @@ class LinearAnimator(Thread):
         :param flip_left_x: flip left channel image horizontally
         :param flip_right_x: flip right channel image horizontally
         """
-        Thread.__init__(self)
         self.index = 0
         self.data_source = data_source
         self.components = components
@@ -62,30 +59,25 @@ class LinearAnimator(Thread):
 
         if flip_left_x:
             self.components[1].content = (self.components[1].content[0], pygame.transform.flip(self.components[1].content[1], True, False))
+
+        self.previous_rect_left = self.components[1].bounding_box.copy()
+        self.previous_rect_right = self.components[2].bounding_box.copy()
+        self.previous_volume_left = self.previous_volume_right = 0.0        
     
     def run(self):
-        """ Thread method. Converts volume value into the mask width and displays corresponding mask. """
-                
-        previous_rect_left = self.components[1].bounding_box.copy()
-        previous_rect_right = self.components[2].bounding_box.copy()
-        previous_volume_left = previous_volume_right = 0.0
+        """ Converts volume value into the mask width and displays corresponding mask. 
         
-        while self.run_flag:
-            d = self.data_source.get_current_data() 
-            
-            try:
-                previous_rect_left, previous_volume_left = self.update_channel(d[0], self.components[1], previous_rect_left, previous_volume_left, True)
-                previous_rect_right, previous_volume_right = self.update_channel(d[1], self.components[2], previous_rect_right, previous_volume_right, False)
-            except:
-                pass
-            
-            time.sleep(self.ui_refresh_period)
-
-    def stop_thread(self):
-        """ Stop thread """
-
-        self.run_flag = False
-        time.sleep(self.ui_refresh_period * 2)
+        :return: list of rectangles for update
+        """
+        d = self.data_source.get_current_data()
+        areas = []
+        try:
+            self.previous_rect_left, self.previous_volume_left, left = self.update_channel(d[0], self.components[1], self.previous_rect_left, self.previous_volume_left, True)
+            self.previous_rect_right, self.previous_volume_right, right = self.update_channel(d[1], self.components[2], self.previous_rect_right, self.previous_volume_right, False)
+            areas = [left, right]
+        except:
+            pass
+        return areas
 
     def update_channel(self, volume, component, previous_rect, previous_volume, left=True):
         """ Update channel
@@ -166,6 +158,5 @@ class LinearAnimator(Thread):
         if self.base.fgr:
             self.base.draw_bgr_fgr(u.copy(), self.base.fgr)
             
-        self.base.update_rectangle(u)
-        
-        return (r.copy(), volume)
+        return (r.copy(), volume, u.copy())
+    

@@ -1,4 +1,4 @@
-# Copyright 2016-2022 Peppy Player peppy.player@gmail.com
+# Copyright 2016-2024 Peppy Player peppy.player@gmail.com
 # 
 # This file is part of Peppy Player.
 # 
@@ -101,23 +101,6 @@ class Component(object):
             except:
                 pass
  
-    def update(self):
-        """ Update Pygame Screen """
-        
-        if not self.visible: return
-        if self.screen:
-            pygame.display.update(self.bounding_box)
-        
-    def update_rectangle(self, r):
-        """ Update Pygame Screen """
-        
-        if not self.visible: return
-        if self.screen:
-            try:
-                pygame.display.update(r)
-            except:
-                pass
-        
     def set_visible(self, flag):
         """ Set component visibility 
         

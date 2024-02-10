@@ -1,4 +1,4 @@
-# Copyright 2016-2022 PeppyMeter peppy.player@gmail.com
+# Copyright 2016-2024 PeppyMeter peppy.player@gmail.com
 # 
 # This file is part of PeppyMeter.
 # 
@@ -15,15 +15,12 @@
 # You should have received a copy of the GNU General Public License
 # along with PeppyMeter. If not, see <http://www.gnu.org/licenses/>.
 
-import time
 import math
-import pygame
 
 from configfileparser import METER_X, METER_Y, UI_REFRESH_PERIOD, NEEDLE_WIDTH, NEEDLE_HEIGHT
-from threading import Thread
 
-class CircularAnimator(Thread):
-    """ Provides needle circular animation in a separate thread """
+class CircularAnimator(object):
+    """ Provides needle circular animation """
     
     def __init__(self, data_source, component, base, meter_parameters, needles, needle_rects, get_data_method, origin_x, origin_y):
         """ Initializer
@@ -38,10 +35,8 @@ class CircularAnimator(Thread):
         :param origin_x: rotation X origin
         :param origin_y: rotation Y origin
         """
-        Thread.__init__(self)             
         self.data_source = data_source
         self.component = component
-        self.run_flag = True
         self.base = base
         self.ui_refresh_period = meter_parameters[UI_REFRESH_PERIOD]
         self.previous_index = 0
@@ -51,22 +46,18 @@ class CircularAnimator(Thread):
         self.meter_parameters = meter_parameters
         self.origin_x = origin_x + meter_parameters[METER_X]
         self.origin_y = origin_y + meter_parameters[METER_Y]
+        self.set_sprite(None, True)
         
     def run(self):
-        """ Thread method. Converts volume value into the needle angle and displays corresponding sprite. """
+        """ Converts volume value into the needle angle and displays corresponding sprite. 
         
-        self.set_sprite(None, True)
-        while self.run_flag:
-            volume = self.get_data()
-            n = self.set_sprite(volume)
-            time.sleep(self.ui_refresh_period)
-            self.previous_index = int(n)
+        :return: list of rectangles for update
+        """
+        volume = self.get_data()
+        n, a = self.set_sprite(volume)
+        self.previous_index = int(n)
 
-    def stop_thread(self):
-        """ Stop thread """
-
-        self.run_flag = False
-        time.sleep(self.ui_refresh_period * 2)
+        return a
 
     def set_sprite(self, volume, init=False):
         """ Set current sprite for new volume level
@@ -82,9 +73,11 @@ class CircularAnimator(Thread):
         n = (volume * self.base.max_volume * self.base.incr) / 100.0
         if n >= len(self.needles):
             n = len(self.needles) - 1
+
+        previous_rect = self.component.bounding_box.copy()
             
         if self.previous_index == int(n) and not init:
-            return n
+            return (n, previous_rect)
             
         diff = n - self.previous_index
         sub_steps = range(int(abs(diff)) * self.base.steps_per_degree)
@@ -94,7 +87,6 @@ class CircularAnimator(Thread):
         else:
             m = 0
 
-        previous_rect = self.component.bounding_box.copy()
         gap = 4
         previous_rect.x -= gap
         previous_rect.y -= gap
@@ -118,5 +110,5 @@ class CircularAnimator(Thread):
         if self.base.fgr:
             self.base.draw_bgr_fgr(a, self.base.fgr)
 
-        self.base.update_rectangle(a)
-        return n
+        return (n, a.copy())
+    
