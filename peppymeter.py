@@ -199,9 +199,9 @@ class Peppymeter(ScreensaverMeter):
                 elif event.type == pygame.MOUSEBUTTONUP and (self.util.meter_config[EXIT_ON_TOUCH] or self.util.meter_config[STOP_DISPLAY_ON_TOUCH]):
                     running = False
 
-            self.refresh()
             areas = self.meter.run()
             pygame.display.update(areas)
+            self.refresh()
             clock.tick(self.util.meter_config[FRAME_RATE])
 
         if self.util.meter_config[STOP_DISPLAY_ON_TOUCH]:
