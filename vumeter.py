@@ -22,7 +22,7 @@ import pygame
 from random import randrange
 from meterfactory import MeterFactory
 from screensavermeter import ScreensaverMeter
-from configfileparser import METER, METER_NAMES, RANDOM_METER_INTERVAL, USE_CACHE, SCREEN_RECT
+from configfileparser import METER, METER_NAMES, RANDOM_METER_INTERVAL, USE_CACHE, SCREEN_RECT, SCREEN_INFO, FRAME_RATE
 
 class Vumeter(ScreensaverMeter):
     """ VU Meter plug-in. """
@@ -37,7 +37,9 @@ class Vumeter(ScreensaverMeter):
         self.meter = None
         
         self.meter_names = self.util.meter_config[METER_NAMES]
-        self.random_meter_interval = int(self.util.meter_config[RANDOM_METER_INTERVAL] / 0.033)
+        random_meter_interval = self.util.meter_config[RANDOM_METER_INTERVAL]
+        frame_rate = self.util.meter_config[SCREEN_INFO][FRAME_RATE]
+        self.frames_before_switch = random_meter_interval * frame_rate
         self.data_source = data_source
         self.timer_controlled_random_meter = timer_controlled_random_meter
         self.random_meter = False
@@ -52,7 +54,7 @@ class Vumeter(ScreensaverMeter):
             
         self.meter = None
         self.current_volume = 100.0
-        self.seconds = 0
+        self.frames = 0
 
         self.mono_needle_cache = {}
         self.mono_rect_cache = {}
@@ -113,7 +115,7 @@ class Vumeter(ScreensaverMeter):
     def stop(self):
         """ Stop meter animation. """ 
         
-        self.seconds = 0       
+        self.frames = 0
         self.meter.stop()
 
         if hasattr(self, "callback_stop"):
@@ -153,7 +155,7 @@ class Vumeter(ScreensaverMeter):
         if not self.timer_controlled_random_meter:
             return
                
-        if (self.random_meter or self.list_meter) and self.seconds == self.random_meter_interval:
-            self.seconds = 0
+        if (self.random_meter or self.list_meter) and self.frames == self.frames_before_switch:
+            self.frames = 0
             self.restart()
-        self.seconds += 1
+        self.frames += 1

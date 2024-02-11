@@ -140,35 +140,31 @@ class DataSource(object):
     def get_current_data(self):
         """ Return current data """
         
-        with self.lock:
-            return self.data
+        return self.data
         
     def get_current_left_channel_data(self):
         """ Return current left channel value """
         
-        with self.lock:
-            if self.data and self.data[0]:
-                return self.data[0]
-            else:
-                return None
+        if self.data and self.data[0]:
+            return self.data[0]
+        else:
+            return None
     
     def get_current_right_channel_data(self):
         """ Return current right channel value """
         
-        with self.lock:
-            if self.data and self.data[1]:
-                return self.data[1]
-            else:
-                return None
+        if self.data and self.data[1]:
+            return self.data[1]
+        else:
+            return None
         
     def get_current_mono_channel_data(self):
         """ Return current mono value """
 
-        with self.lock:
-            if self.data and self.data[2]:
-                return self.data[2]
-            else:
-                return None
+        if self.data and self.data[2]:
+            return self.data[2]
+        else:
+            return None
     
     def get_data(self):
         """ Thread method. """ 
