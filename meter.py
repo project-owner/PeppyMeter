@@ -198,12 +198,15 @@ class Meter(Container):
         :return: list of rectangles for update
         """
         if self.meter_type == TYPE_LINEAR:
-            return self.animator.run()
+            if hasattr(self, "animator") and self.animator:
+                return self.animator.run()
         elif self.meter_type == TYPE_CIRCULAR:
             if self.channels == 2:
-                return [self.left.run(), self.right.run()]
+                if hasattr(self, "left") and self.left and hasattr(self, "right") and self.right:
+                    return [self.left.run(), self.right.run()]
             else:
-                return [self.mono.run()]
+                if hasattr(self, "mono") and self.mono:
+                    return [self.mono.run()]
 
         return None
 
