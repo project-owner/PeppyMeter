@@ -68,7 +68,7 @@ class CircularAnimator(object):
         :return: index of the current sprite
         """
         if volume == None:
-                volume = 0.0            
+            volume = 0.0            
 
         n = (volume * self.base.max_volume * self.base.incr) / 100.0
         if n >= len(self.needles):
