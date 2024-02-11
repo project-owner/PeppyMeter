@@ -158,5 +158,5 @@ class LinearAnimator(object):
         if self.base.fgr:
             self.base.draw_bgr_fgr(u.copy(), self.base.fgr)
             
-        return (r.copy(), volume, u.copy())
+        return (u.copy(), volume, u.copy())
     
