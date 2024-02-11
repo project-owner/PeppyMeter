@@ -38,7 +38,7 @@ class Vumeter(ScreensaverMeter):
         
         self.meter_names = self.util.meter_config[METER_NAMES]
         random_meter_interval = self.util.meter_config[RANDOM_METER_INTERVAL]
-        frame_rate = self.util.meter_config[SCREEN_INFO][FRAME_RATE]
+        frame_rate = self.util.meter_config[FRAME_RATE]
         self.frames_before_switch = random_meter_interval * frame_rate
         self.data_source = data_source
         self.timer_controlled_random_meter = timer_controlled_random_meter

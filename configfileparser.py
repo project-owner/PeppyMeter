@@ -129,7 +129,6 @@ FILE_CONFIG = "config.txt"
 FILE_METER_CONFIG = "meters.txt"
 
 DEFAULT_DEPTH = 32
-DEFAULT_FRAME_RATE = 30
 
 TYPE_LINEAR = "linear"
 TYPE_CIRCULAR = "circular"
@@ -224,7 +223,6 @@ class ConfigFileParser(object):
         self.meter_config[SCREEN_INFO][METER_FOLDER] = meter_folder
         self.meter_config[SCREEN_INFO][WIDTH], self.meter_config[SCREEN_INFO][HEIGHT] = self.get_meter_size(meter_folder)
         self.meter_config[SCREEN_INFO][DEPTH] = DEFAULT_DEPTH
-        self.meter_config[SCREEN_INFO][FRAME_RATE] = DEFAULT_FRAME_RATE
         self.meter_config[DATA_SOURCE] = self.get_data_source_section(c, DATA_SOURCE)        
 
         try:
