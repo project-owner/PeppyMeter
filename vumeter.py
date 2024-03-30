@@ -108,7 +108,7 @@ class Vumeter(ScreensaverMeter):
         
         :return: list of rectangles for update
         """
-        if self.meter:
+        if getattr(self, "meter", None) != None:
             return self.meter.run()
         return None
     
