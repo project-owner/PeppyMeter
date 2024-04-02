@@ -55,6 +55,7 @@ class Peppymeter(ScreensaverMeter):
         self.util.exit_function = self.exit
         self.outputs = {}
         self.timer_controlled_random_meter = timer_controlled_random_meter
+        self.dependent = None
         
         if standalone:
             if self.util.meter_config[USE_LOGGING]:
@@ -206,6 +207,10 @@ class Peppymeter(ScreensaverMeter):
             areas = self.meter.run()
             pygame.display.update(areas)
             self.refresh()
+
+            if self.dependent:
+                self.dependent()
+
             clock.tick(self.util.meter_config[FRAME_RATE])
 
         if self.util.meter_config[STOP_DISPLAY_ON_TOUCH]:
