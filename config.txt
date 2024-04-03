@@ -54,7 +54,7 @@ http.port = 8001
 
 [data.source]
 type = pipe
-polling.interval = 0.033
+polling.interval = 0.04
 pipe.name = /home/pi/myfifo
 volume.constant = 80.0
 volume.min = 0.0
