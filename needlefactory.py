@@ -46,8 +46,10 @@ class NeedleFactory(object):
 
             self.create_needle_sprites(self.mono_needle_sprites, self.mono_needle_rects, self.config[DISTANCE],
                 self.config[START_ANGLE], self.config[STOP_ANGLE], False)
-            mono_needle_cache[name] = self.mono_needle_sprites
-            mono_rect_cache[name] = self.mono_needle_rects
+
+            if self.config[USE_CACHE]:
+                mono_needle_cache[name] = self.mono_needle_sprites
+                mono_rect_cache[name] = self.mono_needle_rects
         elif config[CHANNELS] == 2:
             self.left_needle_sprites = self.get_cached_object(name, left_needle_cache)
             self.right_needle_sprites = self.get_cached_object(name, right_needle_cache)
@@ -67,10 +69,11 @@ class NeedleFactory(object):
                 self.create_needle_sprites(self.right_needle_sprites, self.right_needle_rects, self.config[DISTANCE],
                     self.config[RIGHT_START_ANGLE], self.config[RIGHT_STOP_ANGLE], self.config[RIGHT_NEEDLE_FLIP])
 
-            left_needle_cache[name] = self.left_needle_sprites
-            right_needle_cache[name] = self.right_needle_sprites
-            left_rect_cache[name] = self.left_needle_rects
-            right_rect_cache[name] = self.right_needle_rects
+            if self.config[USE_CACHE]:
+                left_needle_cache[name] = self.left_needle_sprites
+                right_needle_cache[name] = self.right_needle_sprites
+                left_rect_cache[name] = self.left_needle_rects
+                right_rect_cache[name] = self.right_needle_rects
 
     def get_cached_object(self, name, cache):
         """ Get cached object

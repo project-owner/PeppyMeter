@@ -144,6 +144,11 @@ class MeterFactory(object):
         config[NEEDLE_WIDTH] = w
         config[NEEDLE_HEIGHT] = h
         
+        if self.meter_config[USE_CACHE] and len(self.mono_needle_cache) + len(self.left_needle_cache) < self.meter_config[CACHE_SIZE]:
+            config[USE_CACHE] = True
+        else:
+            config[USE_CACHE] = False
+
         factory = NeedleFactory(name, needle, config, self.mono_needle_cache, self.mono_rect_cache, self.left_needle_cache, self.left_rect_cache, self.right_needle_cache, self.right_rect_cache)
         
         if config[CHANNELS] == 2:

@@ -14,6 +14,7 @@ output.pwm = False
 output.http = False
 use.logging = False
 use.cache = True
+cache.size = 20
 frame.rate = 30
 
 [sdl.env]
