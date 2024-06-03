@@ -34,7 +34,7 @@ from configfileparser import *
 class Peppymeter(ScreensaverMeter):
     """ Peppy Meter class """
     
-    def __init__(self, util=None, standalone=False, timer_controlled_random_meter=True):
+    def __init__(self, util=None, standalone=False, timer_controlled_random_meter=True, quit_pygame_on_stop=True):
         """ Initializer
         
         :param util: utility object
@@ -49,6 +49,7 @@ class Peppymeter(ScreensaverMeter):
         self.use_vu_meter = getattr(self.util, USE_VU_METER, None)
         
         self.name = "peppymeter"
+        self.quit_pygame_on_stop = quit_pygame_on_stop
 
         parser = ConfigFileParser()
         self.util.meter_config = parser.meter_config
@@ -215,7 +216,8 @@ class Peppymeter(ScreensaverMeter):
 
         if self.util.meter_config[STOP_DISPLAY_ON_TOUCH]:
             self.meter.stop()
-            pygame.quit()
+            if self.quit_pygame_on_stop:
+                pygame.quit()
         else:
             self.exit()
 
