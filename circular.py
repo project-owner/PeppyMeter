@@ -65,7 +65,7 @@ class CircularAnimator(object):
         :param volume: new volume level
         :param init: True - init stage
 
-        :return: index of the current sprite
+        :return: index of the current sprite, or None if unchanged
         """
         if volume == None:
             volume = 0.0 # nullify
@@ -74,11 +74,11 @@ class CircularAnimator(object):
         if n >= len(self.needles):
             n = len(self.needles) - 1
 
-        previous_rect = self.component.bounding_box.copy()
-            
+        # OPTIMIZATION: Return None when needle position unchanged
         if self.previous_index == int(n) and not init:
-            return (n, previous_rect)
+            return (n, None)
             
+        previous_rect = self.component.bounding_box.copy()
         diff = n - self.previous_index
         sub_steps = range(int(abs(diff)) * self.base.steps_per_degree)
         sign = int(math.copysign(1, diff))

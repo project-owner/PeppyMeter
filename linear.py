@@ -88,8 +88,9 @@ class LinearAnimator(object):
         :previous_volume: previous volume value
 		:left: True - left channel, False - right channel
         """
+        # OPTIMIZATION: Return None for area when volume unchanged
         if previous_volume == volume and self.indicator_type != SINGLE:
-            return (previous_rect, previous_volume) 
+            return (previous_rect, previous_volume, None) 
                        
         self.base.draw_bgr_fgr(previous_rect, self.base.bgr)
                           
