@@ -151,6 +151,7 @@ DIRECTION_BOTTOM_TOP = "bottom-top"
 DIRECTION_TOP_BOTTOM = "top-bottom"
 DIRECTION_EDGES_CENTER = "edges-center"
 DIRECTION_CENTER_EDGES = "center-edges"
+DIRECTION_RIGHT_LEFT = "right-left"
 
 INDICATOR_TYPE = "indicator.type"
 SINGLE = "single"
