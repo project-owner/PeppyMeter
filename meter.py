@@ -69,8 +69,8 @@ class Meter(Container):
         self.meter_y = meter_parameters[METER_Y]
         self.direction = meter_parameters.get(DIRECTION)
         self.indicator_type = meter_parameters.get(INDICATOR_TYPE, None)
-        self.flip_left_x = meter_parameters.get(FLIP_LEFT_X, None)
-        self.flip_right_x = meter_parameters.get(FLIP_RIGHT_X, None)
+        self.flip_left_x = meter_parameters.get(FLIP_LEFT_X, False)
+        self.flip_right_x = meter_parameters.get(FLIP_RIGHT_X, False)
 
     def add_background(self, image_name, meter_x, meter_y):
         """ Position and add background image.
@@ -220,14 +220,22 @@ class Meter(Container):
         comp.content_y = self.origin_y
 
     def reset_mask(self, comp):
-        """ Initialize linear mask. """
-        
-        comp.bounding_box.x = comp.content_x
-        comp.bounding_box.y = comp.content_y
+        """Initialize linear mask source rectangle in image-local coordinates.
+
+        Component.draw() passes bounding_box as the blit source rect into the
+        indicator image. Using screen coordinates here selects pixels outside
+        the image and can make the indicator appear missing until the first
+        volume update rewrites the rect. LinearAnimator must seed its
+        screen-space previous_rect from content_x/content_y, not from this box.
+        """
         w, h = comp.content[1].get_size()
+        comp.bounding_box.x = 0
+        comp.bounding_box.y = 0
         if w > h:
             comp.bounding_box.w = 1
+            comp.bounding_box.h = h
         else:
+            comp.bounding_box.w = w
             comp.bounding_box.h = 1
     
     def stop(self):

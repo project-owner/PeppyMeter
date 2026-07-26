@@ -327,10 +327,26 @@ class ConfigFileParser(object):
         d[STEP_WIDTH_OVERLOAD] = config_file[section].getint(STEP_WIDTH_OVERLOAD, 0)
         d[DIRECTION] = config_file[section].get(DIRECTION, None)
         d[INDICATOR_TYPE] = config_file[section].get(INDICATOR_TYPE, None)
-        d[FLIP_LEFT_X] = config_file[section].get(FLIP_LEFT_X, None)
-        d[FLIP_RIGHT_X] = config_file[section].get(FLIP_RIGHT_X, None)
+        # Same boolean semantics as left.needle.flip / right.needle.flip.
+        # Raw .get() returned strings, so flip.*.x = False was truthy in Python.
+        d[FLIP_LEFT_X] = self.get_optional_boolean(config_file, section, FLIP_LEFT_X)
+        d[FLIP_RIGHT_X] = self.get_optional_boolean(config_file, section, FLIP_RIGHT_X)
 
         return d
+
+    def get_optional_boolean(self, config_file, section, key):
+        """Parse an optional meters.txt boolean.
+
+        Missing or empty => False.
+        Accepts ConfigParser booleans and common True/False spellings.
+        """
+        raw = config_file[section].get(key, None)
+        if raw is None or str(raw).strip() == "":
+            return False
+        try:
+            return config_file[section].getboolean(key)
+        except ValueError:
+            return str(raw).strip().lower() in ("1", "true", "yes", "on")
 
     def get_circular_section(self, config_file, section, meter_type):
         """ Parser for circular meter

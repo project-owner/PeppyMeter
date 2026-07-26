@@ -52,18 +52,53 @@ class LinearAnimator(object):
 
         if direction == None:
             self.direction = DIRECTION_LEFT_RIGHT
-		
-        if flip_right_x:
+
+        # Left and right channels often share one cached indicator Surface.
+        # Flip through a detached copy, then convert_alpha so the result stays
+        # blit-safe across pygame/SDL backends (some desktop drivers otherwise
+        # draw a flipped indicator as empty / invisible).
+        if self.as_bool(flip_right_x):
             self.right_origin_x = self.components[2].content_x
-            self.components[2].content = (self.components[2].content[0], pygame.transform.flip(self.components[2].content[1], True, False))
+            self.components[2].content = (
+                self.components[2].content[0],
+                self.flip_x(self.components[2].content[1]),
+            )
 
-        if flip_left_x:
-            self.components[1].content = (self.components[1].content[0], pygame.transform.flip(self.components[1].content[1], True, False))
+        if self.as_bool(flip_left_x):
+            self.components[1].content = (
+                self.components[1].content[0],
+                self.flip_x(self.components[1].content[1]),
+            )
 
-        self.previous_rect_left = self.components[1].bounding_box.copy()
-        self.previous_rect_right = self.components[2].bounding_box.copy()
-        self.previous_volume_left = self.previous_volume_right = 0.0        
-    
+        # previous_rect_* is screen-space dirty area for draw_bgr_fgr.
+        # reset_mask() leaves bounding_box in image-local coords (blit source);
+        # copying that here seeds (0,0) and the first volume update unions a
+        # huge wipe that can erase other layers (e.g. vinyl/cdart under meters).
+        self.previous_rect_left = pygame.Rect(
+            self.components[1].content_x, self.components[1].content_y, 1, 1)
+        self.previous_rect_right = pygame.Rect(
+            self.components[2].content_x, self.components[2].content_y, 1, 1)
+        self.previous_volume_left = self.previous_volume_right = 0.0
+
+    @staticmethod
+    def as_bool(value):
+        """Normalize flip flags (bool or meters.txt-style string)."""
+        if isinstance(value, bool):
+            return value
+        if value is None:
+            return False
+        return str(value).strip().lower() in ("1", "true", "yes", "on")
+
+    @staticmethod
+    def flip_x(surface):
+        """Horizontal flip that does not mutate a shared cached surface."""
+        src = surface.copy() if hasattr(surface, "copy") else surface
+        flipped = pygame.transform.flip(src, True, False)
+        try:
+            return flipped.convert_alpha()
+        except Exception:
+            return flipped
+
     def run(self):
         """ Converts volume value into the mask width and displays corresponding mask. 
         
