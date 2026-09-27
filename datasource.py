@@ -77,7 +77,7 @@ class DataSource(object):
         self.double_rng.extend(range(int(self.max_in_ui) - 1, int(self.min), -1))
         self.pipe = None
         if self.ds_type == SOURCE_PIPE:
-            thread = Thread(target=self.open_pipe)
+            thread = Thread(target=self.open_pipe, daemon=True)
             thread.start()
         self.previous_left = self.previous_right = self.previous_mono = 0.0
         self.run_flag = True
@@ -133,7 +133,7 @@ class DataSource(object):
             self.flush_pipe_buffer()
 
         self.run_flag = True
-        thread = Thread(target=self.get_data)
+        thread = Thread(target=self.get_data, daemon=True)
         thread.start()
 
         logging.debug("data source started")
@@ -257,8 +257,12 @@ class DataSource(object):
         while True:
             try:
                 data = os.read(self.pipe, self.pipe_size)
-                if len(data) != 0:
-                    latest_data = [data[0], data[1], data[2], data[3]]
+                if len(data) == 0:
+                    # End of file: no process holds the pipe open for writing.
+                    # Return what was read so far instead of looping until
+                    # a writer appears.
+                    break
+                latest_data = [data[0], data[1], data[2], data[3]]
                 time.sleep(self.pipe_polling_inerval)
             except:
                 break
