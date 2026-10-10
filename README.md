@@ -1,4 +1,4 @@
-## Picasso Edition 2024.02.10
+﻿## Picasso Edition 2024.02.10
 
 * Moved a screen update functionality to the main event loop
 * Removed redundant animation threads
@@ -85,3 +85,28 @@ New features:
 PeppyMeter is a software VU Meter written in Python. It was originally developped as the new 'VU Meter' screensaver for [Peppy Player](https://github.com/project-owner/Peppy.doc/wiki). With minor modifications it became a stand-alone application.
 PeppyMeter gets audio data from media players (e.g. mpd) via fifo and displays current volume level in a Graphical User Interface
  in a form of traditional VU Meter.
+
+## Windows system audio capture
+
+On Windows, PeppyMeter captures audio from the default playback device through WASAPI loopback. The default `type = pipe` setting is mapped to loopback on Windows; Linux and other platforms continue to use the configured named pipe. To select loopback explicitly, set `type = loopback` in the `[data.source]` section of `config.txt`.
+
+Install `soundcard` into the same Python 3 environment used to run PeppyMeter:
+
+```powershell
+py -3 -m pip install soundcard
+```
+
+Double-click `start_peppymeter.cmd` to launch the application, or run `py -3 peppymeter.py` from the project directory. The loopback source records stereo audio at 48 kHz and maps RMS levels from -60 to 0 dBFS to the meter range. Restart PeppyMeter after changing the Windows default playback device. Set `use.logging = True` under `[current]` to see capture errors in the log.
+
+## Display and skin controls
+
+Right-click the meter window to open the control menu. It can switch among the `320x240`, `480x320`, `800x480`, and `1280x400` skin sets, change skins immediately at random, toggle the configured 20-second random interval, or move to the previous or next skin in the current resolution. A resolution change reloads that skin set and resizes the window while retaining the active audio source.
+
+Keyboard shortcuts are also available while the meter window is focused:
+
+| Key | Action |
+| --- | --- |
+| Up / Down | Cycle through the four resolutions |
+| Left / Right | Move to the previous / next skin in the current resolution |
+
+Manual skin changes turn off timed random switching. Changing resolution preserves its current on/off state.

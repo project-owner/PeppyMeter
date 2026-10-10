@@ -161,7 +161,7 @@ SINGLE = "single"
 class ConfigFileParser(object):
     """ Configuration file parser """
     
-    def __init__(self):
+    def __init__(self, meter_folder=None):
         """ Initializer """  
               
         self.meter_config = {}
@@ -219,7 +219,8 @@ class ConfigFileParser(object):
 
         self.meter_config[SDL_ENV] = self.get_sdl_environment_section(c, SDL_ENV)
 
-        meter_folder = c.get(CURRENT, METER_FOLDER)
+        requested_meter_folder = meter_folder
+        meter_folder = meter_folder or c.get(CURRENT, METER_FOLDER)
         if not meter_folder or not meter_folder[0].isdigit():
             print("Invalid meter folder name: " + meter_folder)
             os._exit(0)
@@ -230,11 +231,13 @@ class ConfigFileParser(object):
         self.meter_config[SCREEN_INFO][DEPTH] = DEFAULT_DEPTH
         self.meter_config[DATA_SOURCE] = self.get_data_source_section(c, DATA_SOURCE)        
 
-        try:
-            self.meter_config[SCREEN_INFO][WIDTH] = c.getint(CURRENT, SCREEN_WIDTH)
-            self.meter_config[SCREEN_INFO][HEIGHT] = c.getint(CURRENT, SCREEN_HEIGHT)
-        except:
-            pass
+        # 菜单显式指定资源目录时，分辨率以该目录名为准。
+        if requested_meter_folder is None:
+            try:
+                self.meter_config[SCREEN_INFO][WIDTH] = c.getint(CURRENT, SCREEN_WIDTH)
+                self.meter_config[SCREEN_INFO][HEIGHT] = c.getint(CURRENT, SCREEN_HEIGHT)
+            except:
+                pass
         
         meter_config_path = os.path.join(config_path, meter_folder, FILE_METER_CONFIG)
         if not os.path.exists(meter_config_path):

@@ -15,11 +15,14 @@
 # You should have received a copy of the GNU General Public License
 # along with PeppyMeter. If not, see <http://www.gnu.org/licenses/>.
 
+"""提供 PeppyMeter 的模拟、FIFO、HTTP 和 Windows 系统音频数据源。"""
+
 import os
 import math
 import time
 import statistics
 import logging
+import sys
 
 from random import uniform
 from threading import Thread, RLock
@@ -33,6 +36,15 @@ SOURCE_TRIANGLE = "triangle"
 SOURCE_SINE = "sine"
 SOURCE_PIPE = "pipe"
 SOURCE_HTTP = "http"
+SOURCE_LOOPBACK = "loopback"
+
+
+def get_platform_data_source_type(source_type, platform_name=None):
+    """返回当前平台应使用的数据源类型。"""
+    platform_name = platform_name or sys.platform
+    if platform_name.startswith("win") and source_type == SOURCE_PIPE:
+        return SOURCE_LOOPBACK
+    return source_type
 
 MONO_ALGORITHM_MAXIMUM = "maximum"
 MONO_ALGORITHM_AVERAGE = "average"
@@ -76,12 +88,15 @@ class DataSource(object):
         self.double_rng = self.rng
         self.double_rng.extend(range(int(self.max_in_ui) - 1, int(self.min), -1))
         self.pipe = None
+        self.loopback_sample_rate = 48000
         if self.ds_type == SOURCE_PIPE:
             thread = Thread(target=self.open_pipe, daemon=True)
             thread.start()
         self.previous_left = self.previous_right = self.previous_mono = 0.0
         self.run_flag = True
+        self.data_thread = None
         self.polling_interval = self.config[POLLING_INTERVAL]
+        self.loopback_frame_count = max(1, int(self.loopback_sample_rate * self.polling_interval))
         self.pipe_polling_inerval = self.polling_interval / 10
         self.prev_time = None
         self.data = ()
@@ -98,7 +113,8 @@ class DataSource(object):
             SOURCE_TRIANGLE: self.get_triangle_value,
             SOURCE_SINE: self.get_sine_value,
             SOURCE_PIPE: self.get_pipe_value,
-            SOURCE_HTTP: self.get_http_value
+            SOURCE_HTTP: self.get_http_value,
+            SOURCE_LOOPBACK: self.get_loopback_value
         }
     
     def open_pipe(self):
@@ -129,12 +145,22 @@ class DataSource(object):
 
         logging.debug("starting data source...")
 
+        # 回环设备只能由一个录音线程持有，避免重复启动争用 WASAPI。
+        if self.ds_type == SOURCE_LOOPBACK and self.data_thread is not None:
+            if self.data_thread.is_alive():
+                if self.run_flag:
+                    return
+                self.data_thread.join(timeout=max(self.polling_interval * 2, 0.1))
+                if self.data_thread.is_alive():
+                    self.run_flag = True
+                    return
+
         if self.ds_type == SOURCE_PIPE:
             self.flush_pipe_buffer()
 
         self.run_flag = True
-        thread = Thread(target=self.get_data, daemon=True)
-        thread.start()
+        self.data_thread = Thread(target=self.get_data, daemon=True)
+        self.data_thread.start()
 
         logging.debug("data source started")
         
@@ -174,11 +200,103 @@ class DataSource(object):
     
     def get_data(self):
         """ Thread method. """ 
-               
+        if self.ds_type == SOURCE_LOOPBACK:
+            self.get_loopback_data()
+            return
+
         while self.run_flag:
             with self.lock:
                 self.data = self.get_value()
             time.sleep(self.polling_interval)
+
+    def create_loopback_recorder(self):
+        """创建连接到 Windows 默认播放设备的双声道回环录音器。"""
+        try:
+            import soundcard
+        except ImportError as error:
+            raise RuntimeError(
+                "缺少 soundcard 依赖，请运行 python -m pip install soundcard"
+            ) from error
+
+        speaker = soundcard.default_speaker()
+        microphone = soundcard.get_microphone(
+            id=str(speaker.name), include_loopback=True
+        )
+        return microphone.recorder(
+            samplerate=self.loopback_sample_rate,
+            channels=2,
+            blocksize=max(256, self.loopback_frame_count),
+        )
+
+    def get_loopback_data(self):
+        """持续采集系统播放音频；后端不可用时保留静音并记录原因。"""
+        try:
+            recorder = self.create_loopback_recorder()
+            with recorder as active_recorder:
+                while self.run_flag:
+                    samples = active_recorder.record(numframes=self.loopback_frame_count)
+                    with self.lock:
+                        self.data = self.get_loopback_value(samples)
+        except ImportError as error:
+            self.data = (0, 0, 0)
+            self.run_flag = False
+            logging.error("Windows 系统音频采集依赖不可用：%s", error)
+        except Exception as error:
+            self.data = (0, 0, 0)
+            self.run_flag = False
+            logging.error("Windows WASAPI 回环采集失败，请检查默认播放设备：%s", error)
+
+    def get_loopback_value(self, samples=None):
+        """将双声道浮点采样的 RMS 电平转换为现有 VU 表量程。"""
+        left_rms = self.get_loopback_channel_rms(samples, 0)
+        right_rms = self.get_loopback_channel_rms(samples, 1)
+        gain = self.gain_mult * self.get_gain_source_mult()
+        new_left = self.get_loopback_level(left_rms * gain)
+        new_right = self.get_loopback_level(right_rms * gain)
+        new_mono = self.get_mono(new_left, new_right)
+
+        left = self.get_channel(self.previous_left, new_left)
+        right = self.get_channel(self.previous_right, new_right)
+        mono = self.get_channel(self.previous_mono, new_mono)
+
+        if self.smooth_buffer_size:
+            self.smooth_buffer.append((left, right, mono))
+            left = self.get_smooth_value(0)
+            right = self.get_smooth_value(1)
+            mono = self.get_smooth_value(2)
+
+        self.previous_left = left
+        self.previous_right = right
+        self.previous_mono = mono
+        return (left, right, mono)
+
+    def get_loopback_channel_rms(self, samples, channel):
+        """计算一个声道的 RMS；兼容单声道及空采样块。"""
+        if samples is None:
+            return 0.0
+        try:
+            if len(samples) == 0:
+                return 0.0
+            first_frame = samples[0]
+            if hasattr(first_frame, "__len__"):
+                channel_count = len(first_frame)
+                if channel_count == 0:
+                    return 0.0
+                values = [float(frame[min(channel, channel_count - 1)]) for frame in samples]
+            else:
+                values = [float(value) for value in samples]
+            mean_square = sum(value * value for value in values) / len(values)
+            return math.sqrt(mean_square)
+        except (TypeError, ValueError, ZeroDivisionError, IndexError):
+            return 0.0
+
+    def get_loopback_level(self, rms):
+        """将 -60 至 0 dBFS 映射到配置中的 VU 表数值区间。"""
+        if not math.isfinite(rms) or rms <= 0:
+            return self.min
+        dbfs = 20.0 * math.log10(rms)
+        fraction = max(0.0, min(1.0, (dbfs + 60.0) / 60.0))
+        return self.min + fraction * (self.max_in_ui - self.min)
     
     def get_value(self):
         """ Get data depending on the data source type. """ 
