@@ -67,6 +67,11 @@ class DataSource(object):
             self.gain_db = 0.0
         self.gain_mult = 10.0 ** (self.gain_db / 20.0)
         self.gain_source = self.config.get(VOLUME_GAIN_DB_SOURCE, "")
+        try:
+            self.curve = max(0.0, float(self.config.get(VOLUME_CURVE, 0.0)))
+        except Exception:
+            self.curve = 0.0
+        self.curve_norm = math.log1p(self.curve)
         
         self.v = 0
         self.step = self.config[STEP]
@@ -289,6 +294,16 @@ class DataSource(object):
         except Exception:
             return 1.0
 
+    def apply_curve(self, value):
+        """ Apply the logarithmic level curve.
+
+        Maps 0..max_in_ui onto itself with log(1 + k*x) / log(1 + k), which
+        lifts low levels while 0 and full scale stay put. k = 0 is linear.
+        """
+        if self.curve <= 0.0 or value <= 0:
+            return value
+        return self.max_in_ui * math.log1p(self.curve * value / self.max_in_ui) / self.curve_norm
+
     def get_pipe_value(self):
         """ Get signal from the named pipe. """
 
@@ -308,8 +323,8 @@ class DataSource(object):
                 return (0, 0, 0)
             
             gain = self.gain_mult * self.get_gain_source_mult()
-            new_left = int(self.max_in_ui * ((data[length - 4] + (data[length - 3] << 8)) / self.max_in_pipe) * gain)
-            new_right = int(self.max_in_ui * ((data[length - 2] + (data[length - 1] << 8)) / self.max_in_pipe) * gain)
+            new_left = int(self.apply_curve(self.max_in_ui * ((data[length - 4] + (data[length - 3] << 8)) / self.max_in_pipe) * gain))
+            new_right = int(self.apply_curve(self.max_in_ui * ((data[length - 2] + (data[length - 1] << 8)) / self.max_in_pipe) * gain))
             new_mono = self.get_mono(new_left, new_right)
             
             left = self.get_channel(self.previous_left, new_left)
