@@ -86,6 +86,18 @@ VOLUME_MAX_IN_PIPE = "volume.max.in.pipe"
 VOLUME_GAIN_DB = "volume.gain.db"
 VOLUME_GAIN_DB_SOURCE = "volume.gain.db.source"
 VOLUME_CURVE = "volume.curve"
+VOLUME_TEXT = "volume.text"
+TEXT = "text"
+TEXT_READOUTS = (VOLUME_TEXT, TEXT)
+TEXT_SOURCE = ".source"
+TEXT_CENTER_X = ".center.x"
+TEXT_CENTER_Y = ".center.y"
+TEXT_FONT = ".font"
+TEXT_FONT_SIZE = ".font.size"
+TEXT_COLOR = ".color"
+TEXT_MAX_WIDTH = ".max.width"
+TEXT_FORMAT = ".format"
+TEXT_FORMAT_TEXT = ".format.text"
 STEP = "step"
 MONO_ALGORITHM = "mono.algorithm"
 STEREO_ALGORITHM = "stereo.algorithm"
@@ -301,6 +313,8 @@ class ConfigFileParser(object):
         d[VOLUME_GAIN_DB] = config_file.getfloat(section, VOLUME_GAIN_DB, fallback=0.0)
         d[VOLUME_GAIN_DB_SOURCE] = config_file.get(section, VOLUME_GAIN_DB_SOURCE, fallback="")
         d[VOLUME_CURVE] = config_file.getfloat(section, VOLUME_CURVE, fallback=0.0)
+        for readout in TEXT_READOUTS:
+            d[readout + TEXT_SOURCE] = config_file.get(section, readout + TEXT_SOURCE, fallback="")
         d[MONO_ALGORITHM] = config_file.get(section, MONO_ALGORITHM)
         d[STEREO_ALGORITHM] = config_file.get(section, STEREO_ALGORITHM)
         d[STEP] = config_file.getint(section, STEP)
@@ -401,6 +415,32 @@ class ConfigFileParser(object):
         d[BGR_FILENAME] = config_file.get(section, BGR_FILENAME)
         d[FGR_FILENAME] = config_file[section].get(FGR_FILENAME, None)
         d[INDICATOR_FILENAME] = config_file.get(section, INDICATOR_FILENAME)
+        for readout in TEXT_READOUTS:
+            d[readout] = self.get_text_options(config_file[section], readout)
+
+    def get_text_options(self, s, readout):
+        """ Parser for the optional text readout of a meter (volume.text.* or text.*)
+
+        :param s: meter section
+        :param readout: key prefix
+        :return: readout options, or None when its center is not set
+        """
+        x = s.getint(readout + TEXT_CENTER_X, None)
+        y = s.getint(readout + TEXT_CENTER_Y, None)
+        if x is None or y is None:
+            return None
+
+        color = s.get(readout + TEXT_COLOR, "255,255,255")
+        return {
+            TEXT_CENTER_X: x,
+            TEXT_CENTER_Y: y,
+            TEXT_FONT: s.get(readout + TEXT_FONT, ""),
+            TEXT_FONT_SIZE: s.getint(readout + TEXT_FONT_SIZE, 48),
+            TEXT_COLOR: tuple(int(c) for c in color.split(",")),
+            TEXT_MAX_WIDTH: s.getint(readout + TEXT_MAX_WIDTH, 0),
+            TEXT_FORMAT: s.get(readout + TEXT_FORMAT, "", raw=True),
+            TEXT_FORMAT_TEXT: s.get(readout + TEXT_FORMAT_TEXT, "{}", raw=True)
+        }
 
     def get_sdl_environment_section(self, config_file, section):
         """ Parser for SDL library OS environment section
