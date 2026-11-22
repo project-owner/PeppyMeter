@@ -22,6 +22,7 @@ from container import Container
 from configfileparser import *
 from linear import LinearAnimator
 from circular import CircularAnimator
+from textreadout import TextReadout
 
 class Meter(Container):
     """ The base class for all meters """
@@ -71,6 +72,7 @@ class Meter(Container):
         self.indicator_type = meter_parameters.get(INDICATOR_TYPE, None)
         self.flip_left_x = meter_parameters.get(FLIP_LEFT_X, False)
         self.flip_right_x = meter_parameters.get(FLIP_RIGHT_X, False)
+        self.text_readouts = []
 
     def add_background(self, image_name, meter_x, meter_y):
         """ Position and add background image.
@@ -176,6 +178,11 @@ class Meter(Container):
         if self.fgr: self.reset_bgr_fgr(self.fgr)
         
         super(Meter, self).draw()
+        self.text_readouts = [TextReadout(self, self.data_source, r) for r in TEXT_READOUTS
+            if self.meter_parameters.get(r) and self.data_source.text_sources[r].path]
+        for t in self.text_readouts:
+            t.run([], force=True)
+
         needles = (self.left_needle_sprites, self.right_needle_sprites, self.mono_needle_sprites)
         rects = (self.left_needle_rects, self.right_needle_rects, self.mono_needle_rects)
 
@@ -193,8 +200,22 @@ class Meter(Container):
                     self.data_source.get_current_mono_channel_data, self.meter_parameters[MONO_ORIGIN_X], self.meter_parameters[MONO_ORIGIN_Y])
 
     def run (self):
-        """ Run the current meter  
-        
+        """ Run the current meter and the optional text readouts
+
+        :return: list of rectangles for update
+        """
+        areas = self.run_meter()
+        if self.text_readouts:
+            areas = list(areas) if areas else []
+            for t in self.text_readouts:
+                r = t.run(areas)
+                if r:
+                    areas.append(r)
+        return areas
+
+    def run_meter(self):
+        """ Run the current meter animation
+
         :return: list of rectangles for update
         """
         if self.meter_type == TYPE_LINEAR:
@@ -241,6 +262,7 @@ class Meter(Container):
     def stop(self):
         """ Stop meter animation """
         
+        self.text_readouts = []
         if self.meter_type == TYPE_LINEAR:
             self.animator = None
         elif self.meter_type == TYPE_CIRCULAR:

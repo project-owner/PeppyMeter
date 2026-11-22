@@ -67,6 +67,7 @@ class DataSource(object):
             self.gain_db = 0.0
         self.gain_mult = 10.0 ** (self.gain_db / 20.0)
         self.gain_source = self.config.get(VOLUME_GAIN_DB_SOURCE, "")
+        self.text_sources = {r: TextSource(self.config.get(r + TEXT_SOURCE, "")) for r in TEXT_READOUTS}
         try:
             self.curve = max(0.0, float(self.config.get(VOLUME_CURVE, 0.0)))
         except Exception:
@@ -294,6 +295,14 @@ class DataSource(object):
         except Exception:
             return 1.0
 
+    def get_text_value(self, readout):
+        """ Return the current value of a text readout (volume.text or text)
+
+        :param readout: readout key prefix
+        :return: the stripped content of its source file, or None
+        """
+        return self.text_sources[readout].get_value()
+
     def apply_curve(self, value):
         """ Apply the logarithmic level curve.
 
@@ -373,3 +382,77 @@ class DataSource(object):
             channel_value = statistics.mean([previous_value, new_value])
                 
         return channel_value
+
+
+class TextSource(object):
+    """ File holding the value of a text readout, re-read only when it changes: on file system
+    events when the optional watchdog package is installed, otherwise when its modification time changes.
+    """
+
+    def __init__(self, path):
+        """ Initializer
+
+        :param path: source file, empty when the readout is not used
+        """
+        self.path = path
+        self.value = None
+        self.mtime = None
+        self.watch = None
+
+    def get_value(self):
+        """ Return the stripped file content, or None when no source is set or the file is missing/unreadable """
+
+        if not self.path:
+            return None
+        if self.watch is None:
+            self.watch = self.start_watch()
+        if not self.watch:
+            try:
+                mtime = os.stat(self.path).st_mtime_ns
+            except Exception:
+                mtime = None
+            if mtime != self.mtime:
+                self.mtime = mtime
+                self.read()
+        return self.value
+
+    def read(self):
+        """ Read the source file """
+
+        try:
+            with open(self.path) as f:
+                self.value = f.read().strip()
+        except Exception:
+            self.value = None
+
+    def start_watch(self):
+        """ Watch the source file with the optional watchdog package
+
+        :return: True if the file is watched, False to fall back to polling its modification time
+        """
+        try:
+            from watchdog.observers import Observer
+            from watchdog.events import FileSystemEventHandler
+        except Exception:
+            return False
+
+        path = os.path.abspath(self.path)
+        source = self
+
+        class Handler(FileSystemEventHandler):
+            def on_any_event(self, event):
+                # Opened/closed-without-write events (including our own reads) are ignored
+                if event.event_type in ("created", "modified", "closed", "moved", "deleted") \
+                        and path in (event.src_path, getattr(event, "dest_path", "")):
+                    source.read()
+
+        try:
+            observer = Observer()
+            observer.schedule(Handler(), os.path.dirname(path))
+            observer.start()
+        except Exception as e:
+            logging.debug(e)
+            return False
+
+        self.read()
+        return True
