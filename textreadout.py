@@ -21,7 +21,8 @@ import pygame
 from configfileparser import *
 
 class TextReadout(object):
-    """ Text readout (volume.text or text): the value read from its source file, drawn over the meter background """
+    """ Text readout (volume.text or text): the value read from its source file, drawn over the meter background,
+    one line per newline in the value """
 
     def __init__(self, meter, data_source, readout):
         """ Initializer
@@ -87,11 +88,17 @@ class TextReadout(object):
             return None
         self.value = value
 
-        text = self.font.render(self.fit(self.get_text(value)), True, self.color)
-        rect = text.get_rect(center=self.center)
+        # One line per newline in the value, stacked and centered as a block
+        lines = [self.font.render(self.fit(line), True, self.color) for line in self.get_text(value).split("\n")]
+        line_size = self.font.get_linesize()
+        width = max(line.get_width() for line in lines)
+        height = line_size * (len(lines) - 1) + lines[-1].get_height()
+        rect = pygame.Rect(0, 0, width, height)
+        rect.center = self.center
         area = rect.union(self.rect) if self.rect else rect.copy()
         self.meter.draw_bgr_fgr(area, self.meter.bgr)
-        self.screen.blit(text, rect)
+        for i, line in enumerate(lines):
+            self.screen.blit(line, line.get_rect(centerx=rect.centerx, top=rect.top + i * line_size))
         if self.meter.fgr:
             self.meter.draw_bgr_fgr(area, self.meter.fgr)
         self.rect = rect
