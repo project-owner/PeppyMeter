@@ -45,12 +45,18 @@ class Vumeter(ScreensaverMeter):
         self.random_meter = False
         self.list_meter = False
         self.list_meter_index = 0
-        
+        self.timed_random_enabled = False
+        self.random_meter_names = copy.copy(self.meter_names)
+        self.current_meter_name = None
+        self.forced_meter_name = None
+
         if self.util.meter_config[METER] == "random":
             self.random_meter = True
-            self.random_meter_names = copy.copy(self.meter_names)
         elif "," in self.util.meter_config[METER]:
             self.list_meter = True
+        self.timed_random_enabled = bool(
+            timer_controlled_random_meter and (self.random_meter or self.list_meter)
+        )
             
         self.meter = None
         self.current_volume = 100.0
@@ -65,26 +71,83 @@ class Vumeter(ScreensaverMeter):
     
     def get_meter(self):
         """ Creates meter using meter factory. """  
-              
-        if self.meter and not (self.random_meter or self.list_meter):
-            return self.meter
-        
-        if self.random_meter:
-            if len(self.random_meter_names) == 0:
-                self.random_meter_names = copy.copy(self.meter_names)
-            i = randrange(0, len(self.random_meter_names))     
-            self.util.meter_config[METER] = self.random_meter_names[i]
-            del self.random_meter_names[i]
+
+        if self.forced_meter_name is not None:
+            meter_name = self.forced_meter_name
+            self.forced_meter_name = None
+        elif self.random_meter:
+            meter_name = self.get_next_random_meter_name()
         elif self.list_meter:
             if self.list_meter_index == len(self.meter_names):
                 self.list_meter_index = 0
-            self.util.meter_config[METER] = self.meter_names[self.list_meter_index]
+            meter_name = self.meter_names[self.list_meter_index]
             self.list_meter_index += 1
+        else:
+            meter_name = self.util.meter_config[METER]
+
+        if self.meter and self.current_meter_name == meter_name:
+            return self.meter
+
+        self.util.meter_config[METER] = meter_name
 
         factory = MeterFactory(self.util, self.util.meter_config, self.data_source, self.mono_needle_cache, self.mono_rect_cache, self.left_needle_cache, self.left_rect_cache, self.right_needle_cache, self.right_rect_cache)
         m = factory.create_meter()
+        self.current_meter_name = meter_name
 
         return m
+
+    def get_next_random_meter_name(self):
+        """从当前分辨率皮肤列表中抽取一个，尽量避免连续重复。"""
+        if not self.random_meter_names:
+            self.random_meter_names = [
+                name for name in self.meter_names if name != self.current_meter_name
+            ] or copy.copy(self.meter_names)
+        if not self.random_meter_names:
+            return self.current_meter_name
+        index = randrange(0, len(self.random_meter_names))
+        return self.random_meter_names.pop(index)
+
+    def set_timed_random_enabled(self, enabled):
+        """开启或关闭定时随机模式，不在切换状态时立即更换皮肤。"""
+        self.timed_random_enabled = bool(enabled)
+        self.timer_controlled_random_meter = self.timed_random_enabled
+        self.frames = 0
+        self.list_meter = False
+        self.random_meter = self.timed_random_enabled
+        if self.random_meter:
+            self.random_meter_names = [
+                name for name in self.meter_names if name != self.current_meter_name
+            ] or copy.copy(self.meter_names)
+        elif self.current_meter_name is not None:
+            self.util.meter_config[METER] = self.current_meter_name
+
+    def switch_to_random_meter(self):
+        """立即随机切换一次，并保留定时随机模式状态。"""
+        if not self.meter_names:
+            return
+        self.forced_meter_name = self.get_next_random_meter_name()
+        self.restart()
+
+    def next_manual_meter(self):
+        """切到当前分辨率的下一款皮肤，末尾循环到开头。"""
+        self.switch_manual_meter(1)
+
+    def previous_manual_meter(self):
+        """切到当前分辨率的上一款皮肤，开头循环到末尾。"""
+        self.switch_manual_meter(-1)
+
+    def switch_manual_meter(self, direction):
+        """手动切换会关闭定时随机，并在当前皮肤列表内循环。"""
+        if not self.meter_names:
+            return
+        self.set_timed_random_enabled(False)
+        try:
+            current_index = self.meter_names.index(self.current_meter_name)
+        except ValueError:
+            current_index = -1 if direction > 0 else 0
+        next_index = (current_index + direction) % len(self.meter_names)
+        self.forced_meter_name = self.meter_names[next_index]
+        self.restart()
     
     def set_volume(self, volume):
         """ Set volume level 
@@ -152,7 +215,7 @@ class Vumeter(ScreensaverMeter):
     def refresh(self):
         """ Refresh meter. Used to update random meter. """
 
-        if not self.timer_controlled_random_meter:
+        if not self.timed_random_enabled:
             return
                
         if (self.random_meter or self.list_meter) and self.frames == self.frames_before_switch:
